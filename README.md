@@ -281,25 +281,26 @@ More detailed documentation for the `prj` tool can be found in [`prj/manual/prj-
 Pregenerated RTOS API manuals can be found on the [eChronos GitHub wiki](https://github.com/echronos/echronos/wiki) or you can [build them yourself](#building-user-documentation).
 
 
-# Software Model
+# Structure
 
-The software model and structure of the RTOS is governed by two stages of customization.
+The structure of the eChronos RTOS family is governed by two stages of customization.
 
-In the first stage, features, in the form of *components*, are customized for and composed into *variants* of the RTOS such that each variant has a specific feature set.
+In the first stage, features, in the form of *components*, are customized for and composed into RTOS *variants* such that each variant has a specific feature set.
 This stage is supported by the `x.py` tool.
 
 In the second stage, the RTOS variant is customized to the specific properties and requirements of a specific application.
 Although this customization is limited to the functionality provided by the given variant, it controls details such as the number of tasks required by the application.
 This stage is supported by the `prj` tool.
 
-The two stages can optionally be separated by deploying a *product release* to an application project.
-The application project is then only exposed to the second stage and the variant and functionality of the RTOS they require.
+The two stages are designed to be run separately.
+Development of a specific RTOS variant is done by RTOS developers, and results in a *product release* of an RTOS SDK.
+This SDK is then designed to be used by system developers who use the released SDK for firmware system development.
 
 The following sections cover these concepts in more detail.
 
 ## Variants and Components
 
-The RTOS comes in a number of different *variants*, each offering a specific set of features for a particular platform.
+The are a number of different *RTOS variants* in the eChronos RTOS family, each offering a specific set of features for a particular platform.
 
 For example:
 
@@ -308,6 +309,8 @@ It is available for QEMU-emulated ARMv7-M.
 
 * The RTOS variant *Kochab* supports tasks, preemptive priority scheduling, mutexes with priority inheritance, semaphores, signals, and interrupt events which can cause task preemption and trigger the sending of signals.
 It is available for the ARMv7e-M STM32F4-Discovery board, QEMU-emulated ARMv7-M, and QEMU-emulated PowerPC e500.
+
+RTOS developers can create new *RTOS variants* by adding new features and configurations to this eChronos source code repository.
 
 Features are implemented as individual *components* in individual C files.
 Unlike typical C-based software, the RTOS does not compile components individually and later link them into a single binary.
@@ -323,9 +326,9 @@ The variants and platforms contained in a release are defined by [`release_cfg.p
 
 ## Systems, Modules and Packages
 
-An RTOS *system* encompasses the entirety of the OS and an application on top of it.
+A firmware *system* encompasses the entirety of an RTOS and an application on top of it.
 It consists in particular of:
-- the OS in the form of a variant of the RTOS with a feature set suitable for the application (e.g., which form of scheduling is supported)
+- the RTOS in the form of a variant with a feature set suitable for the application (e.g., which form of scheduling is supported)
 - a *system configuration* that tailors the variant to the specific application instance (e.g., how many task or mutexes the application requires)
 - the application code itself
 
@@ -413,6 +416,23 @@ The RTOS variants themselves are specified as lists of components within `x.py` 
 Adding a new RTOS variant means adding the appropriate list entries to `x.py`, and adding new component code in the `components` directory structure if necessary.
 
 Please see the existing component code under [`components`](components) for examples on how to develop RTOS components.
+
+
+## Developing support for a new hardware architecture
+
+Adding support for a new hardware architecture involves adding the necessary code and updating the `x.py` tool to generate appropriate RTOS variants.
+
+The `CORE_CONFIGURATIONS` variable in `x.py` is mapping from hardware architecture to a list of supported RTOS variants.
+
+It is recommended that the simplest RTOS variant, *Acamar* is used for initial development of a new supported architecture.
+
+New components are required for a new supported architecture.
+Specifically a *context-switch* and *stack* component for the new architecture.
+
+The *stack* component should allocate a stack for each configured task.
+
+The *context-switch* component provides an implementation of the *context_init*, *context_switch* and *context_switch_first* functions.
+**Note:** these functions may be implemented as macros rather than functions.
 
 
 ## Building user documentation
