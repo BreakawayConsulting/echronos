@@ -43,10 +43,17 @@ Of course, we are also keen on your changes and contributions if you have any - 
 
 # Overview
 
-The eChronos RTOS is a real-time operating system (RTOS) originally developed by NICTA/Data61 and Breakaway Consulting Pty. Ltd.
+eChronos is a family real-time operating systems (RTOS-s) originally developed by NICTA/Data61 and Breakaway Consulting Pty. Ltd.
 
 It is intended for tightly resource-constrained devices without memory management units and virtual memory support.
-To this end, the RTOS code base is designed to be highly modular and configurable on multiple levels, so that only the minimal amount of code necessary is ever compiled into a given system image.
+The RTOS code base is designed to be highly modular and configurable on multiple levels, so that only the minimal amount of code necessary is ever compiled into a given system image.
+To achieve this level of specialisation the eChronos family consists of a number of different RTOS-s each targeting a specific set of features on a specific hardware platform.
+
+This eChronos source code repository contains the source code and tools that are capable of generating each different RTOS in the overall eChronos family.
+
+Developers that are interested in creating a new RTOS to join the eChronos family or improving an existing RTOS should make changes in this source code to regenerate a specific RTOS.
+
+Developers that are interested in using an RTOS form the eChronos family for system development are best served by directly using one of the generated software development kits (SDKs).
 
 Available implementations currently target ARM Cortex-M4 and PowerPC e500.
 The RTOS also runs on POSIX platforms (e.g., Linux, MacOS-X, Windows with cygwin or MinGW) for rapid prototyping.
