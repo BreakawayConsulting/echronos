@@ -126,3 +126,14 @@ class Posix(Standard):
     packages = ['posix', 'generic', 'rtos-example', 'unittest']
     platforms = ['x86_64-apple-darwin', 'x86_64-unknown-linux-gnu', 'win32']
     release_name = 'posix'
+
+
+class RaspberryPi3B(Standard):
+    packages = ['armv8a', 'generic', 'machine-rpi3b', 'bcm2837']
+    platforms = ['win32']
+    release_name = 'brkawy_rpi3b'
+    version = '3.0.5.1'
+    extra_files = [
+        ('README.md', 'docs/brkawy_rpi3b_readme.md'),
+    ]
+    
