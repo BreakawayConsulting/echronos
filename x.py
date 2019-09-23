@@ -102,7 +102,7 @@ CORE_CONFIGURATIONS = {"posix": ["sched-rr-test", "sched-prio-inherit-test", "si
                                  "blocking-mutex-test", "simple-semaphore-test", "sched-prio-test",
                                  "acamar", "gatria", "kraz", "acrux", "rigel"],
                        "armv7m": ["acamar", "gatria", "kraz", "acrux", "rigel", "kochab", "phact"],
-                       "armv8a": ["acamar", "gatria", "kraz", "acrux"],
+                       "armv8a": ["acamar", "gatria", "kraz", "acrux", "rigel"],
                        "ppce500": ["acamar", "gatria", "kraz", "acrux", "kochab", "phact"],
                        "stub": ["acamar", "gatria", "kraz", "acrux", "rigel", "kochab", "phact"]}
 
