@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+     Copyright (c) 2019, Breakaway Consulting Pty. Ltd.
+-->
+
+<system>
+  <modules>
+    <module name="machine-rpi3b.build" />
+    <module name="armv8a.startup" />
+    <module name="armv8a.ctxt-switch" />
+    <module name="bcm2837.miniuart-debug" />
+    <module name="generic.debug" />
+
+    <module name="armv8a.rtos-gatria">
+      <prefix>rtos</prefix>
+      <taskid_size>8</taskid_size>
+      <tasks>
+
+        <task>
+          <name>a</name>
+          <function>fn_a</function>
+          <stack_size>1024</stack_size>
+        </task>
+
+        <task>
+          <name>b</name>
+          <function>fn_b</function>
+          <stack_size>1024</stack_size>
+        </task>
+
+      </tasks>
+
+      <mutexes>
+        <mutex>
+          <name>a</name>
+        </mutex>
+      </mutexes>
+    </module>
+
+    <module name="rtos-example.gatria-test" />
+
+  </modules>
+</system>
