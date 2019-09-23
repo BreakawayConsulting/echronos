@@ -12,7 +12,7 @@ def run(system, _=None):
 
 
 def system_build(system):
-    prefixes = ['aarch64-lixnux-gnu-', 'aarch64-elf-']
+    prefixes = ['aarch64-linux-gnu-', 'aarch64-elf-']
     for prefix in prefixes:
         if which(prefix + 'gcc') is not None:
             break
