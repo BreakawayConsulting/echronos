@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+     Copyright (c) 2019, Breakaway Consulting Pty. Ltd.
+-->
+
+<system>
+  <modules>
+    <module name="machine-rpi3b.build" />
+
+    <module name="armv8a.startup">
+      <platform_init>bcm2837_init</platform_init>
+    </module>
+    <module name="armv8a.vectable" />
+    <module name="armv8a.ctxt-switch" />
+
+    <module name="bcm2837.miniuart-debug" />
+    <module name="bcm2837.platform"/>
+    <module name="bcm2837.timer"/>
+
+    <module name="generic.debug">
+      <enable_64bit>true</enable_64bit>
+    </module>
+
+    <module name="armv8a.rtos-rigel">
+      <prefix>rtos</prefix>
+      <signalset_size>8</signalset_size>
+      <api_asserts>true</api_asserts>
+      <internal_asserts>true</internal_asserts>
+      <fatal_error>fatal</fatal_error>
+
+      <tasks>
+
+        <task>
+          <name>a</name>
+          <function>fn_a</function>
+          <stack_size>1024</stack_size>
+          <start>true</start>
+        </task>
+
+        <task>
+          <name>b</name>
+          <function>fn_b</function>
+          <stack_size>1024</stack_size>
+        </task>
+
+      </tasks>
+
+      <signal_labels>
+
+        <signal_label>
+          <name>test</name>
+          <global>true</global>
+        </signal_label>
+
+        <signal_label>
+          <name>timer</name>
+          <tasks>
+            <task>a</task>
+            <task>b</task>
+          </tasks>
+        </signal_label>
+
+      </signal_labels>
+
+      <timers>
+
+        <timer>
+          <name>test</name>
+          <enabled>true</enabled>
+          <reload>10</reload>
+          <task>a</task>
+          <sig_set>timer</sig_set>
+        </timer>
+
+        <timer>
+          <name>supervisor</name>
+          <enabled>false</enabled>
+          <reload>10</reload>
+          <error>2</error>
+        </timer>
+
+      </timers>
+
+      <interrupt_events>
+        <interrupt_event>
+          <name>tick</name>
+          <task>a</task>
+          <sig_set>test</sig_set>
+        </interrupt_event>
+      </interrupt_events>
+
+      <mutexes>
+        <mutex>
+          <name>test</name>
+        </mutex>
+      </mutexes>
+      <mutex>
+        <stats>true</stats>
+      </mutex>
+
+      <profiling>
+        <task_uptime>true</task_uptime>
+        <hook_for_task_switch>record_task_switch</hook_for_task_switch>
+      </profiling>
+
+      <message_queues>
+        <message_queue>
+          <name>test</name>
+          <message_size>2</message_size>
+          <queue_length>2</queue_length>
+        </message_queue>
+      </message_queues>
+    </module>
+
+    <module name="rtos-example.rigel-test" />
+
+  </modules>
+</system>
