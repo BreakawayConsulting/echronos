@@ -48,6 +48,9 @@ _asm_entry:
 3:
 	LDR     x0, =_stack_top
 	MOV     sp, x0
+{{#platform_init}}
+	BL      {{platform_init}}
+{{/platform_init}}
 	BL      main
 
 	/*

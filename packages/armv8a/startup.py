@@ -11,6 +11,7 @@ class EntryModule(Module):
 <schema>
     <entry name="code_addr" type="int" default="0x80000" />
     <entry name="stack_size" type="int" default="0x1000" />
+    <entry name="platform_init" type="c_ident" default="" />
 </schema>"""
 
     files = [
