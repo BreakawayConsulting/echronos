@@ -18,6 +18,7 @@
   <schema>
    <entry name="prefix" type="c_ident" default="" />
    <entry name="ll_debug" type="c_ident" default="" />
+   <entry name="enable_64bit" type="bool" default="false" />
   </schema>
 </module>*/
 
@@ -58,6 +59,34 @@ get_hexdigit(const uint8_t val)
     }
     return ch;
 }
+
+{{#enable_64bit}}
+void
+{{prefix}}debug_printhex64(const uint64_t val)
+{
+    char str[19];
+    str[0] = '0';
+    str[1] = 'x';
+    str[2] = get_hexdigit((val >> 60) & 0xf);
+    str[3] = get_hexdigit((val >> 56) & 0xf);
+    str[4] = get_hexdigit((val >> 52) & 0xf);
+    str[5] = get_hexdigit((val >> 48) & 0xf);
+    str[6] = get_hexdigit((val >> 44) & 0xf);
+    str[7] = get_hexdigit((val >> 40) & 0xf);
+    str[8] = get_hexdigit((val >> 36) & 0xf);
+    str[9] = get_hexdigit((val >> 32) & 0xf);
+    str[10] = get_hexdigit((val >> 28) & 0xf);
+    str[11] = get_hexdigit((val >> 24) & 0xf);
+    str[12] = get_hexdigit((val >> 20) & 0xf);
+    str[13] = get_hexdigit((val >> 16) & 0xf);
+    str[14] = get_hexdigit((val >> 12) & 0xf);
+    str[15] = get_hexdigit((val >> 8) & 0xf);
+    str[16] = get_hexdigit((val >> 4) & 0xf);
+    str[17] = get_hexdigit((val >> 0) & 0xf);
+    str[18] = 0;
+    debug_print(str);
+}
+{{/enable_64bit}}
 
 void
 {{prefix}}debug_printhex32(const uint32_t val)
