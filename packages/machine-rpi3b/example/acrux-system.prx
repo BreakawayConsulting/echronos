@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+     Copyright (c) 2019, Breakaway Consulting Pty. Ltd.
+-->
+
+<system>
+  <modules>
+    <module name="machine-rpi3b.build" />
+
+    <module name="armv8a.startup">
+      <platform_init>bcm2837_init</platform_init>
+    </module>
+    <module name="armv8a.vectable" />
+    <module name="armv8a.ctxt-switch" />
+
+    <module name="bcm2837.miniuart-debug" />
+    <module name="bcm2837.platform"/>
+    <module name="bcm2837.timer"/>
+
+    <module name="generic.debug">
+      <enable_64bit>true</enable_64bit>
+    </module>
+
+    <module name="armv8a.rtos-acrux">
+      <prefix>rtos</prefix>
+      <taskid_size>8</taskid_size>
+      <tasks>
+
+        <task>
+          <name>a</name>
+          <function>fn_a</function>
+          <stack_size>1024</stack_size>
+        </task>
+
+        <task>
+          <name>b</name>
+          <function>fn_b</function>
+          <stack_size>1024</stack_size>
+        </task>
+
+      </tasks>
+      <interrupt_events>
+        <interrupt_event>
+          <name>dummy</name>
+        </interrupt_event>
+      </interrupt_events>
+
+      <mutexes>
+        <mutex>
+          <name>dummy</name>
+        </mutex>
+      </mutexes>
+
+    </module>
+
+    <module name="rtos-example.acrux-test" />
+
+  </modules>
+</system>
