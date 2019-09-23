@@ -46,9 +46,9 @@ rtos_internal_context_switch_first:
         mov     sp, x3
 
         /* restore callee saved registers and link register from stack */
-        ldp     x19, x21, [sp], #16
-        ldp     x21, x23, [sp], #16
-        ldp     x23, x25, [sp], #16
+        ldp     x19, x20, [sp], #16
+        ldp     x21, x22, [sp], #16
+        ldp     x23, x24, [sp], #16
         ldp     x25, x26, [sp], #16
         ldp     x27, x28, [sp], #16
         ldp     x29, x30, [sp], #16
