@@ -129,10 +129,10 @@ class Posix(Standard):
 
 
 class RaspberryPi3B(Standard):
-    packages = ['armv8a', 'generic', 'machine-rpi3b', 'bcm2837']
+    packages = ['armv8a', 'generic', 'rtos-example', 'machine-rpi3b', 'bcm2837']
     platforms = ['win32']
     release_name = 'brkawy_rpi3b'
-    version = '3.0.5.1'
+    version = '3.0.5.2'
     extra_files = [
         ('README.md', 'docs/brkawy_rpi3b_readme.md'),
     ]
