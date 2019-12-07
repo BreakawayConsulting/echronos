@@ -26,6 +26,47 @@ from .cmdline import subcmd, Arg
 from .docs import is_release_doc_file, is_nonrelease_doc_file
 
 
+# When a release is generated the current approach automatically tags every
+# file with a standard license and copyright header.
+#
+# This was extremely useful when the source itself was private, and only
+# the generated release files were public.
+#
+# Now, the underlying source is public, so this approach is not really the
+# most appropriate way of making these changes.
+#
+# Additionally, there are multiple parties contributing source code, so
+# simply placing all released code under a single entities copyright is
+# not appropriate.
+#
+# Unfortunately, changing this would require some significant repo-wide
+# changes. As a work-around the standard license is excluded from certain
+# files; it is applied to all other files.
+#
+# The files listed here are expected to be appropriately tagged with their
+# own Copyright and license as appropriate.
+STANDARD_LICENSE_EXCLUSIONS = [
+    "docs/brkawy_rpi3b_readme.md",
+
+    "packages/armv8a/ctxt-switch.s",
+    "packages/armv8a/startup.s",
+    "packages/armv8a/vectable.s",
+    "packages/armv8a/default.ld",
+
+    "packages/bcm2837/miniuart-debug.c",
+    "packages/bcm2837/platform.c",
+    "packages/bcm2837/timer.c",
+
+    "packages/machine-rpi3b/build.py",
+    "packages/machine-rpi3b/example/acamar-system.prx",
+    "packages/machine-rpi3b/example/acrux-system.prx",
+    "packages/machine-rpi3b/example/gatria-system.prx",
+    "packages/machine-rpi3b/example/kraz-system.prx",
+    "packages/machine-rpi3b/example/rigel-system.prx",
+    "packages/machine-rpi3b/example/hello.prx",
+]
+
+
 class _ReleaseMeta(type):
     """A pretty-printing meta-class for the Release class."""
     def __str__(cls):
@@ -195,6 +236,10 @@ class _LicenseOpener:
         self.allow_unknown_filetypes = allow_unknown_filetypes
         self.filename = filename
         self.xml_prologue = '<?xml version="1.0" encoding="UTF-8" ?>'
+        self.excluded_paths = [
+            os.path.join(self.top_dir, p)
+            for p in STANDARD_LICENSE_EXCLUSIONS
+        ]
 
     def _consume_xml_prologue(self, file_obj):
         xml_prologue_len = len(self.xml_prologue)
@@ -272,6 +317,12 @@ class _LicenseOpener:
             lic = self._format_lic(self.doc_license, 'REM', 'REM ', 'REM', 'REM')
         elif ext not in self.LICENSE_EXEMPTED_FILETYPES and not self.allow_unknown_filetypes:
             raise Exception('Unexpected ext: {}, for file {}'.format(ext, filename))
+
+        # Override by checking any exclusions
+        for path in self.excluded_paths:
+            if os.path.samefile(filename, path):
+                lic = None
+                break
 
         if lic is None:
             lic = ''
