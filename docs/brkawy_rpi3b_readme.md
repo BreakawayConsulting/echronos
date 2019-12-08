@@ -9,7 +9,13 @@ Overview
 This eChronos release provides support for the Raspberry Pi 3B series of single-board computers.
 It should work on both the Raspberry Pi 3B and Raspberry Pi 3B+ models.
 Testing of this release has been performed on the newer Raspberry Pi 3B+ model.
-Although the Raspberry Pi has a multi-core SoC this release only utilizes a single core - other cores are kept in a disabled state.
+
+The RTOS variants available in this release do not support executing on multiple cores.
+The RTOS will execute on core zero, while other cores will be held in reset.
+
+However, this release does include rudimentary platform support for multiple core.
+The hellomulti example system demonstrates the platform support for multiple cores.
+This platform support forms the basis for future multi-core aware RTOS variants.
 
 Recommended Hardware
 ---------------------
@@ -105,7 +111,10 @@ For us this will be the `system` file, which is explained more in the following 
 Building the Hello World example
 ----------------------------------
 
-The following command will build the Hello World example:
+This section describes how to build the *Hello World* example.
+The approach described here can be applied to the other examples available in this release.
+
+The following command will build the *Hello World* example:
 
     > .\bin\prj build machine-rpi3b.example.hello
 
