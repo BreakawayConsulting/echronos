@@ -10,6 +10,7 @@
 # @TAG(CSIRO_BSD_MIT)
 #
 
+import logging
 import os
 import shutil
 import subprocess
@@ -98,6 +99,7 @@ def _build_doc(pkg_dir, verbose=False):
 
     wkh_executable = _get_executable_from_repo_or_system('wkhtmltopdf')
     wkh_cmd = [wkh_executable,
+               '-q',
                '--outline-depth', '2',
                '--page-size', 'A4',
                '--margin-top', '20',
@@ -111,6 +113,7 @@ def _build_doc(pkg_dir, verbose=False):
                '--replace', 'docid', 'Document ID: {}'.format(doc_vars['docid']),
                html_file,
                pdf_file]
+    logging.info("Generating documentation for: %s", pkg_dir)
     if verbose:
         print(wkh_cmd)
     try:
