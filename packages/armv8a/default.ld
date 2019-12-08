@@ -40,10 +40,18 @@ SECTIONS
         __bss_size = . - __bss_start;
 
          .stacks : {
+{{#cpu_single_core}}
             . = . + {{stack_size}};
             _stack_top = .;
+{{/cpu_single_core}}
+{{^cpu_single_core}}
+{{#cpu_init_stacks}}
+            . = . + {{stack_size}};
+            _stack_top_{{idx}} = .;
+{{/cpu_init_stacks}}
+{{/cpu_single_core}}
         }
- 
+
         /* Debug sections */
 
         .debug_aranges  0 : { *(.debug_aranges) }

@@ -1,6 +1,16 @@
 /* Copyright (c) 2019, Breakaway Consulting Pty. Ltd. */
 .global _asm_entry
 
+{{^cpu_single_core}}
+.section .rodata
+_per_cpu_stack:
+{{#cpu_init_stacks}}
+        .dword _stack_top_{{idx}}
+{{/cpu_init_stacks}}
+
+{{/cpu_single_core}}
+
+
 .section .text.startup
 .type entry,#function
 
@@ -22,14 +32,36 @@ _asm_entry:
 	*/
 	MRS     x0, mpidr_el1
 	AND     x0, x0, #255
-	
+
 	/*
-	For CPUs other than zero, jump to the infinite loop.
-	Current implementation status only supports a single
-	CPU.
+	For CPUs greater than CPU count jump to the infinite loop.
+	The number of supported CPUs is controlled by the configuration
+	For single CPU fast-path is used.
 	*/
+{{#cpu_single_core}}
 	CBNZ    x0, 4f
-	
+	LDR     x2, =_stack_top
+{{/cpu_single_core}}
+
+{{^cpu_single_core}}
+	/* Check number of supported CPUs from the setup */
+	CMP		x0, {{cpu_count}}
+	BGE    	4f
+
+	/*
+	For supported cores set x2 to be the top of the
+	CPU specific core.
+	*/
+	LDR     x1, =_per_cpu_stack
+	LDR     x2, [x1, x0, LSL#3]
+
+	/*
+	Only perform BSS setup on Core #0 - other CPUs jump
+	immediately to stack setup
+	*/
+	CBNZ    x0, 3f
+{{/cpu_single_core}}
+
 1:
 	/*
 	Clear the bss. The firmware image is usually not ELF loaded
@@ -46,18 +78,16 @@ _asm_entry:
 
 	/* initialise stack pointer and call main() */
 3:
-	LDR     x0, =_stack_top
-	MOV     sp, x0
+	MOV     sp, x2
 {{#platform_init}}
 	BL      {{platform_init}}
 {{/platform_init}}
 	BL      main
 
 	/*
-	Infinite loop - reached if main() returns, or for CPUs other
-	than zero
+	Infinite loop - reached if main() returns, or for non-configured
+	cores.
 	*/
 4:
 	WFE
 	B       4b
-   
