@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+     Copyright (c) 2019, Breakaway Consulting Pty. Ltd.
+-->
+
+<system>
+  <modules>
+    <module name="machine-rpi3b.build" />
+    <module name="armv8a.startup">
+      <cpu_count>4</cpu_count>
+      <platform_init>bcm2837_init</platform_init>
+    </module>
+    <module name="armv8a.vectable" />
+
+    <module name="generic.hello">
+      <phrase>Hello Raspberry Pi 3!</phrase>
+    </module>
+    <module name="bcm2837.platform" />
+    <module name="bcm2837.miniuart-debug" />
+    <module name="generic.debug">
+      <enable_64bit>true</enable_64bit>
+    </module>
+
+  </modules>
+</system>
