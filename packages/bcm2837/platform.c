@@ -26,6 +26,13 @@
  *
  */
 
+/*<module>
+  <code_gen>template</code_gen>
+  <schema>
+    <entry name="tick_handler" type="c_ident" optional="true" />
+  </schema>
+</module>*/
+
 #include <stdint.h>
 
 #include "debug.h"
@@ -98,13 +105,14 @@ __attribute__ ((noreturn)) void abort_handler(uint64_t type, uint64_t esr, uint6
 
  __attribute__ ((noreturn)) void irq_handler(uint64_t spsr, uint64_t elr, uint64_t sp)
 {
+{{#tick_handler}}
     uint32_t source = IRQ_SOURCE[0];
 
     if (source == TIMER_IRQ_SOURCE)
     {
-        tick_irq();
+        {{tick_handler}}();
     }
-
+{{/tick_handler}}
     /* Other interrupt sources are currently ignored. */
 
     _asm_return_from_irq(spsr, elr, sp);

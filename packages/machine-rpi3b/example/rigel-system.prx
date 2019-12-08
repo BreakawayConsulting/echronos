@@ -14,7 +14,9 @@
     <module name="armv8a.ctxt-switch" />
 
     <module name="bcm2837.miniuart-debug" />
-    <module name="bcm2837.platform"/>
+    <module name="bcm2837.platform">
+      <tick_handler>tick_irq</tick_handler>
+    </module>
     <module name="bcm2837.timer"/>
 
     <module name="generic.debug">
