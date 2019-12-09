@@ -44,6 +44,7 @@
   </schema>
 </module>*/
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "system.h"

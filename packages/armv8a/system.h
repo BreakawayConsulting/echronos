@@ -1,6 +1,7 @@
 /* Copyright (c) 2019, Breakaway Consulting Pty. Ltd. */
 
 typedef uint8_t CoreId;
+typedef bool Spinlock;
 
 #define CORE_ID_0 ((CoreId) UINT8_C(0))
 #define CORE_ID_INVALID ((CoreId) UINT8_C(0xFF))
@@ -52,3 +53,6 @@ static inline void write_hcr_el2(uint64_t r)
 static inline void write_daif(uint64_t r) {
     asm volatile ("msr daif, %0" : : "r"(r));
 }
+
+void spinlock_acquire(Spinlock *l);
+void spinlock_release(Spinlock *l);

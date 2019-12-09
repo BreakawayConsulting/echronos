@@ -15,6 +15,23 @@
   </schema>
 </module>*/
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "system.h"
+
+void spinlock_acquire(Spinlock *l)
+{
+    asm volatile("msr daifset, #2");
+    while (__atomic_test_and_set(l, __ATOMIC_ACQUIRE)) {
+        asm volatile("wfe");
+    }
+}
+
+/* Release the lock */
+void spinlock_release(Spinlock *l)
+{
+    __atomic_clear(l, __ATOMIC_RELEASE);
+    asm volatile("sev");
+    asm volatile("msr daifclr, #2");
+}
