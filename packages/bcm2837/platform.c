@@ -41,6 +41,7 @@
   <code_gen>template</code_gen>
   <schema>
     <entry name="tick_handler" type="c_ident" optional="true" />
+    <entry name="irq_return" type="c_ident" default="_asm_return_from_irq" />
   </schema>
 </module>*/
 
@@ -64,7 +65,7 @@
 /* Export from the vectable assembly module. */
 extern uint64_t _vector_table;
 extern void _asm_entry(void) __attribute__ ((noreturn));
-extern void _asm_return_from_irq(uint64_t spsr, uint64_t elr, uint64_t sp) __attribute__ ((noreturn));
+extern void {{irq_return}}(uint64_t spsr, uint64_t elr, uint64_t sp) __attribute__ ((noreturn));
 
 extern void tick_irq(void);
 
@@ -223,5 +224,5 @@ __attribute__ ((noreturn)) void abort_handler(uint64_t type, uint64_t esr, uint6
 {{/tick_handler}}
     /* Other interrupt sources are currently ignored. */
 
-    _asm_return_from_irq(spsr, elr, sp);
+    {{irq_return}}(spsr, elr, sp);
 }
