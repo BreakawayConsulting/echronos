@@ -17,7 +17,9 @@
       <phrase>Hello Raspberry Pi 3!</phrase>
     </module>
     <module name="bcm2837.platform" />
-    <module name="bcm2837.miniuart-debug" />
+    <module name="bcm2837.miniuart-debug">
+      <multicore>true</multicore>
+    </module>
     <module name="generic.debug">
       <enable_64bit>true</enable_64bit>
     </module>
