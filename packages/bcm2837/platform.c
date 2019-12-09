@@ -3,10 +3,12 @@
 /*
  * The module provides basic platform support for the BCM2837 chip.
  *
- * Primarily this means support for interrupt handling and routing.
+ * Primarily this means support for interrupt handling and routing, pagetable
+ * initialization, MMU configuration and multicore startup.
  *
  * The bcm2837_init function should be called prior to the main entry
- * point to correctly initialize the vector table and and interrupt handling.
+ * point to correctly initialize the vector table, interrupt handling, pagetables,
+ * MMU and secondary cores.
  * This is normally done by setting the platform_init configuration point in
  * the ARMv8A startup module.
  *
@@ -24,6 +26,15 @@
  * All other exceptions are routed to the abort_handler function. The abort_handler implementation
  * relies on the debug module to print appropriate useful information about the exception received.
  *
+ * Although it is possible to execute with the MMU disabled (and indeed the boot-loader and init
+ * code successfully execute with the MMU disabled) there are some important CPU operations that
+ * will only work in cases where the CPU is running with the MMU enabled. One important example
+ * of this is the ability to execute atomic instructions.
+ *
+ * The platform initialization creates a direct mapped pagetable for both memory and peripherals.
+ * (initialize_pagetables).
+ *
+ * The pagetable is installed and the MMU enabled (initialize_mmu).
  */
 
 /*<module>
@@ -44,12 +55,26 @@
 
 #define CORE_COUNT 4
 
+#define PAGE_TABLE_2_ENTRY_COUNT 512
+#define PAGE_TABLE_2_DEVICE_ENTRY_IDX 400 //504
+#define PAGE_TABLE_BLOCK_SIZE 0x200000 /* 2MB */
+#define PAGE_TABLE_2A_ENTRY_COUNT 1 /* See Quad A7 control document, first 2MB is ARM timer/IRQs/mailboxes */
+
 /* Export from the vectable assembly module. */
 extern uint64_t _vector_table;
 extern void _asm_entry(void) __attribute__ ((noreturn));
 extern void _asm_return_from_irq(uint64_t spsr, uint64_t elr, uint64_t sp) __attribute__ ((noreturn));
 
 extern void tick_irq(void);
+
+/* Level 1 page table has a single entry covering 1GB. Points
+   to level2 pagetable with 512 2MB entries.
+   This covers all the useful physical address space.
+   Both page tables must be 4KB aligned.
+ */
+static uint64_t pagetable1[2] __attribute__ ((aligned(4096)));
+static uint64_t pagetable2a[PAGE_TABLE_2_ENTRY_COUNT] __attribute__ ((aligned(4096)));
+static uint64_t pagetable2b[PAGE_TABLE_2_ENTRY_COUNT] __attribute__ ((aligned(4096)));
 
 static void initialize_vector_table(void)
 {
@@ -96,16 +121,75 @@ initialize_smp_startpen(void)
     }
 }
 
+/*
+ * Create direct mapped pagetables; this allows in-place execution to
+ * occur.
+ *
+ * Memory and peripherals are mapped appropriately.
+ */
+static void
+initialize_pagetables(void)
+{
+    uint64_t addr = 0;
+    int i;
+
+    /* Make PTE in level 1 page table point to level 2 page table
+     *  (3L marks it as a page table pointer)
+     */
+    pagetable1[0] = (uint64_t)&pagetable2a | 3L;
+    pagetable1[1] = (uint64_t)&pagetable2b | 3L;
+
+    for (i = 0; i < PAGE_TABLE_2_DEVICE_ENTRY_IDX; i++) {
+        pagetable2a[i] = addr | 0x705;
+        addr += PAGE_TABLE_BLOCK_SIZE;
+    }
+
+    for (; i < PAGE_TABLE_2_ENTRY_COUNT; i++) {
+        pagetable2a[i] = addr | 0x701;
+        addr += PAGE_TABLE_BLOCK_SIZE;
+    }
+
+    for (i = 0; i < PAGE_TABLE_2A_ENTRY_COUNT; i++) {
+        pagetable2b[i] = addr | 0x701;
+        addr += PAGE_TABLE_BLOCK_SIZE;
+    }
+    /* rest are left zeroed  - no access */
+}
+
+/*
+ * Enable the MMU on the core.
+ *
+ * This assumes the shared pagetable structues have already been
+ * initialised correctly.
+ */
+static void initialize_mmu(void)
+{
+    write_tcr_el2((1L << 31) | (1L << 23) | 0x351fL);
+    write_mair_el2(0xFF00);
+    write_ttbr0_el2((uint64_t)pagetable1);
+
+    /* Actually turn on MMU for this core */
+    uint64_t sctrl_el2 = read_sctlr_el2();
+    sctrl_el2 |= (1 << 0) | (1 << 2) | (1 << 1) | (1 << 12);
+    write_sctlr_el2(sctrl_el2);
+}
+
 void bcm2837_init(void)
 {
     CoreId core = get_core_id();
 
-    initialize_vector_table();
-    initialize_exceptions();
-
     if (core == CORE_ID_0)
     {
         initialize_smp_startpen();
+        initialize_pagetables();
+    }
+
+    initialize_vector_table();
+    initialize_exceptions();
+    initialize_mmu();
+
+    if (core == CORE_ID_0)
+    {
         start_secondary_cores();
     }
 }
