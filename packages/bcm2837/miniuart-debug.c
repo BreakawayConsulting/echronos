@@ -34,6 +34,7 @@
   <code_gen>template</code_gen>
   <schema>
     <entry name="multicore" type="bool" default="false" />
+    <entry name="multicore_color" type="bool" default="true" />
   </schema>
 </module>*/
 
@@ -80,12 +81,6 @@ static void lock_release(void)
 
 static void putc(unsigned int c)
 {
-{{#multicore}}
-    if (!lock_have()) {
-        lock_acquire();
-    }
-{{/multicore}}
-
     /* Busy loop until "Transmitter empty" bit is set */
     asm volatile("": : :"memory");
     do {
@@ -96,17 +91,33 @@ static void putc(unsigned int c)
     /* Write character to the output FIFO */
     *AUX_MU_IO_REG = c;
     asm volatile("": : :"memory");
+}
 
 {{#multicore}}
+static void multicore_putc(unsigned int c)
+{
+    if (!lock_have()) {
+        lock_acquire();
+{{#multicore_color}}
+        putc('\e');
+        putc('[');
+        putc('3');
+        putc('1' + get_core_id());
+        putc('m');
+{{/multicore_color}}
+    }
+
+    putc(c);
+
     if (c == '\n') {
         lock_release();
     }
-{{/multicore}}
 }
+{{/multicore}}
 
 void debug_puts(char *s)
 {
     while (*s != '\0') {
-        putc(*s++);
+        {{#multicore}}multicore_{{/multicore}}putc(*s++);
     }
 }
