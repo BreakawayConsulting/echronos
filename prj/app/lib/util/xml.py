@@ -415,7 +415,7 @@ def check_schema_is_valid(schema, key_path=None):
             except ValueError as exc:
                 error("default value has a bad type ({})".format(exc))
         if schema['type'] == 'list':
-            if default != []:
+            if default != "[]":
                 error("list default can only be an empty list.")
 
     if schema['type'] == 'dict':
@@ -500,7 +500,7 @@ def xml2schema(element):
                 if entry['default'] != '[]':
                     msg = "Invalid default '{}'. Only empty list '[]' is supported as a list default."
                     raise SystemParseError(xml_error_str(element, msg.format(entry['default'])))
-                entry['default'] = util.LengthList([])
+                entry['default'] = "[]"
                 entry['optional'] = True
         elif _type == 'dict':
             entry['dict_type'] = read_dict_schema(element)
@@ -725,7 +725,8 @@ def xml2dict(element, schema=None):
                 result = util.LengthList(list_values)
             else:
                 if schema.get('default') is not None:
-                    result = schema['default']
+                    assert schema.get('default') == '[]'
+                    result = util.LengthList([])
                 elif schema.get('optional', False):
                     result = None
                 else:
