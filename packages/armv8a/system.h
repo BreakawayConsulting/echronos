@@ -24,3 +24,17 @@ static inline uint64_t read_sctlr_el2(void) {
 static inline void write_sctlr_el2(uint64_t r) {
     asm volatile ("msr sctlr_el2, %0" : : "r"(r));
 }
+
+static inline void write_vbar_el2(uint64_t r)
+{
+    asm volatile ("msr vbar_el2, %0" : : "r"(r));
+}
+
+static inline void write_hcr_el2(uint64_t r)
+{
+    asm volatile ("msr hcr_el2, %0" : : "r"(r));
+}
+
+static inline void write_daif(uint64_t r) {
+    asm volatile ("msr daif, %0" : : "r"(r));
+}

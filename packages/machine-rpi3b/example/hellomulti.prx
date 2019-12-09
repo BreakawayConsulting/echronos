@@ -11,6 +11,7 @@
       <platform_init>bcm2837_init</platform_init>
     </module>
     <module name="armv8a.vectable" />
+    <module name="armv8a.system" />
 
     <module name="generic.hello">
       <phrase>Hello Raspberry Pi 3!</phrase>

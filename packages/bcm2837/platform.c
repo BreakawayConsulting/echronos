@@ -35,6 +35,7 @@
 
 #include <stdint.h>
 
+#include "system.h"
 #include "debug.h"
 
 typedef uint8_t CoreId;
@@ -67,20 +68,6 @@ static inline CoreId get_core_id(void)
     uint64_t r;
     asm volatile ("mrs %0, mpidr_el1" : "=r"(r));
     return r & CORE_ID_MASK;
-}
-
-static inline void write_vbar_el2(uint64_t r)
-{
-    asm volatile ("msr vbar_el2, %0" : : "r"(r));
-}
-
-static inline void write_hcr_el2(uint64_t r)
-{
-    asm volatile ("msr hcr_el2, %0" : : "r"(r));
-}
-
-static inline void write_daif(uint64_t r) {
-    asm volatile ("msr daif, %0" : : "r"(r));
 }
 
 static void initialize_vector_table(void)
