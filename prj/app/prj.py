@@ -51,7 +51,7 @@ _logging.basicConfig = error_fn
 
 import pystache.parser
 import pystache.renderer
-from util.util import prepend_tool_binaries_to_path_environment_variable
+from util.util import prepend_tool_binaries_to_path_environment_variable, LengthList
 from util.xml import UserError, NOTHING, xml_parse_file, single_text_child, maybe_single_named_child,\
     xml_parse_file_with_includes, xml_parse_string, get_attribute, single_named_child, xml2schema,\
     xml2dict, SystemParseError, xml_error_str, maybe_get_element_list, check_schema_is_valid, SchemaInvalidError
