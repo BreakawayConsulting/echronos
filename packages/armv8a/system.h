@@ -1,5 +1,19 @@
 /* Copyright (c) 2019, Breakaway Consulting Pty. Ltd. */
 
+typedef uint8_t CoreId;
+
+#define CORE_ID_0 ((CoreId) UINT8_C(0))
+#define CORE_ID_INVALID ((CoreId) UINT8_C(0xFF))
+
+#define CORE_ID_MASK 0x7
+
+static inline CoreId get_core_id(void)
+{
+    uint64_t r;
+    asm volatile ("mrs %0, mpidr_el1" : "=r"(r));
+    return r & CORE_ID_MASK;
+}
+
 static inline void write_tcr_el2(uint64_t r) {
     asm volatile ("msr tcr_el2, %0" : : "r"(r));
 }

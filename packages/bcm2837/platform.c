@@ -38,21 +38,9 @@
 #include "system.h"
 #include "debug.h"
 
-typedef uint8_t CoreId;
-
 #define IRQ_SOURCE (*(volatile uint32_t (*)[4])(0x40000060))
 
 #define TIMER_IRQ_SOURCE 2
-#define CORE_ID_MASK 0x7
-
-/*
- * Note: The number of cores on the BCM platform is fixed at 4, so it is
- * reasonable to hard-code here.
- */
-#define CORE_ID_0 ((CoreId) UINT8_C(0))
-#define CORE_ID_1 ((CoreId) UINT8_C(1))
-#define CORE_ID_2 ((CoreId) UINT8_C(2))
-#define CORE_ID_3 ((CoreId) UINT8_C(3))
 
 #define CORE_COUNT 4
 
@@ -62,13 +50,6 @@ extern void _asm_entry(void) __attribute__ ((noreturn));
 extern void _asm_return_from_irq(uint64_t spsr, uint64_t elr, uint64_t sp) __attribute__ ((noreturn));
 
 extern void tick_irq(void);
-
-static inline CoreId get_core_id(void)
-{
-    uint64_t r;
-    asm volatile ("mrs %0, mpidr_el1" : "=r"(r));
-    return r & CORE_ID_MASK;
-}
 
 static void initialize_vector_table(void)
 {
@@ -110,7 +91,7 @@ initialize_smp_startpen(void)
        cache later */
     uint64_t *spinboot = (uint64_t*)0xd8;
 
-    for (CoreId i = CORE_ID_1; i < CORE_COUNT; i++) {
+    for (CoreId i = CORE_ID_0 + 1; i < CORE_COUNT; i++) {
         spinboot[i] = (uint64_t)_asm_entry;
     }
 }
