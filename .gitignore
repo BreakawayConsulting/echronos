@@ -13,6 +13,13 @@ packages/*/rtos-*
 prj.errors
 prj_build*
 
+# Lyrae is not (currently) built from component, but is manually
+# constructed specifically for armv8a.
+#
+# As a result, override the normal exclusion and include it in
+# revision control
+!packages/armv8a/rtos-lyrae
+
 
 # merge artefacts
 *.orig
