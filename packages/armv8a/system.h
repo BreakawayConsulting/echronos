@@ -56,3 +56,9 @@ static inline void write_daif(uint64_t r) {
 
 void spinlock_acquire(Spinlock *l);
 void spinlock_release(Spinlock *l);
+
+#define interrupt_disable() asm volatile("msr daifset, #2")
+#define interrupt_enable() asm volatile("msr daifclr, #2")
+
+
+#define DEFAULT_SPSR ((1L << 9) | (1L << 8) | (1L << 6) | (2L << 2) | 1)
