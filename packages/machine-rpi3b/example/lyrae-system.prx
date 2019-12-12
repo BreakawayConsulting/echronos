@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+     Copyright (c) 2019, Breakaway Consulting Pty. Ltd.
+-->
+
+<system>
+  <modules>
+    <module name="machine-rpi3b.build" />
+
+    <module name="armv8a.startup">
+      <cpu_count>1</cpu_count>
+      <platform_init>bcm2837_init</platform_init>
+    </module>
+    <module name="armv8a.vectable" />
+    <module name="armv8a.system" />
+    <module name="armv8a.ctxt-switch" />
+    <module name="armv8a.tg-ctxt-switch" />
+
+    <module name="bcm2837.miniuart-debug">
+      <multicore>true</multicore>
+    </module>
+    <module name="bcm2837.platform">
+      <tick_handler>tick_irq</tick_handler>
+      <irq_return>rtos_return_from_irq</irq_return>
+    </module>
+    <module name="bcm2837.timer"/>
+
+    <module name="generic.debug">
+      <enable_64bit>true</enable_64bit>
+    </module>
+
+    <module name="armv8a.rtos-lyrae">
+      <prefix>rtos</prefix>
+      <signalset_size>8</signalset_size>
+      <api_asserts>true</api_asserts>
+      <internal_asserts>true</internal_asserts>
+      <fatal_error>fatal</fatal_error>
+      <mutex>
+        <stats>true</stats>
+      </mutex>
+
+      <taskgroups>
+        <taskgroup>
+          <name>tg1</name>
+          <priority>0</priority>
+          <tasks>
+            <task>
+              <name>tg1_a</name>
+              <function>fn_tg1_a</function>
+              <stack_size>8000</stack_size>
+              <start>true</start>
+            </task>
+          </tasks>
+
+          <mutexes>
+            <mutex>
+              <name>tg1_test</name>
+            </mutex>
+          </mutexes>
+
+        </taskgroup>
+
+        <taskgroup>
+          <name>tg2</name>
+          <priority>1</priority>
+          <tasks>
+
+            <task>
+              <name>tg2_a</name>
+              <function>fn_tg2_a</function>
+              <stack_size>8000</stack_size>
+              <start>true</start>
+            </task>
+
+            <task>
+              <name>tg2_b</name>
+              <function>fn_tg2_b</function>
+              <stack_size>8000</stack_size>
+            </task>
+
+            <task>
+              <name>tg2_c</name>
+              <function>fn_tg2_c</function>
+              <stack_size>8000</stack_size>
+            </task>
+          </tasks>
+
+          <mutexes>
+            <mutex>
+              <name>tg2_test</name>
+            </mutex>
+          </mutexes>
+        </taskgroup>
+      </taskgroups>
+
+    </module>
+
+    <module name="rtos-example.lyrae-test" />
+
+  </modules>
+</system>
