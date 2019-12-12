@@ -17,6 +17,9 @@ However, this release does include rudimentary platform support for multiple cor
 The hellomulti example system demonstrates the platform support for multiple cores.
 This platform support forms the basis for future multi-core aware RTOS variants.
 
+This release includes an initial release of the Lyrae RTOS variant.
+The Lyrae variant supports the new *task group* concept which enables priority based preemption of groups of tasks.
+
 Recommended Hardware
 ---------------------
 
