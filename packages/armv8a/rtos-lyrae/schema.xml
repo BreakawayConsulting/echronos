@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<schema>
+    <entry name="signalset_size" type="int" default="8" />
+    <entry name="mutex" type="dict" optional="true">
+        <entry name="stats" type="bool" default="false" />
+    </entry>
+    <entry name="taskid_size" type="int" default="8" />
+    <entry name="internal_asserts" type="bool" default="false" />
+    <entry name="prefix" type="ident" optional="true" />
+    <entry name="api_asserts" type="bool" default="true" />
+    <entry name="fatal_error" type="c_ident" optional="false" />
+    <entry name="profiling" optional="true" type="dict">
+        <entry name="task_uptime" optional="true" type="bool" default="false" />
+        <entry name="hook_for_task_switch" type="c_ident" default="" />
+    </entry>
+    <entry name="interrupteventid_size" type="int" default="8" />
+
+    <entry name="taskgroups" type="list" auto_index_field="idx">
+        <entry name="taskgroup" type="dict">
+            <entry name="name" type="ident" />
+            <entry name="priority" type="int" />
+
+            <entry name="signal_labels" type="list" auto_index_field="idx" default="[]" >
+                <entry name="signal_label" type="dict">
+                    <entry name="name" type="ident" />
+                <entry name="global" optional="true" type="bool" />
+                    <entry name="tasks" optional="true" type="list">
+                        <entry name="task" type="object" group="tasks" />
+                    </entry>
+                    <constraint name="constraint0" type="one_of">
+                        <entry name="global">global</entry>
+                        <entry name="tasks">tasks</entry>
+                    </constraint>
+                </entry>
+            </entry>
+
+            <entry name="timers" type="list" auto_index_field="idx" default="[]">
+                <entry name="timer" type="dict">
+                    <entry name="name" type="ident" />
+                    <entry name="enabled" type="bool" default="false" />
+                    <entry name="reload" type="int" default="0" />
+                    <entry name="error" type="int" default="0" />
+                    <entry name="task" type="object" group="tasks" optional="true"/>
+                    <entry name="sig_set" type="ident" optional="true" />
+                </entry>
+            </entry>
+
+            <entry name="interrupt_events" type="list" auto_index_field="idx" default="[]">
+                <entry name="interrupt_event" type="dict">
+                    <entry name="name" type="ident" />
+                <entry name="task" type="object" group="tasks" />
+                    <entry name="sig_set" type="ident" />
+                </entry>
+            </entry>
+
+            <entry name="mutexes" type="list" auto_index_field="idx" default="[]">
+                <entry name="mutex" type="dict">
+                    <entry name="name" type="ident" />
+                </entry>
+            </entry>
+
+            <entry name="tasks" type="list" auto_index_field="idx">
+                <entry name="task" type="dict">
+                    <entry name="function" type="c_ident" />
+                    <entry name="name" type="ident" />
+                    <entry name="stack_size" type="int" />
+                    <entry name="start" type="bool" default="false" />
+                </entry>
+            </entry>
+
+        </entry>
+    </entry>
+
+
+</schema>
