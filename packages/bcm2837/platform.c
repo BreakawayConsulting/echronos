@@ -215,7 +215,7 @@ __attribute__ ((noreturn)) void abort_handler(uint64_t type, uint64_t esr, uint6
  __attribute__ ((noreturn)) void irq_handler(uint64_t spsr, uint64_t elr, uint64_t sp)
 {
 {{#tick_handler}}
-    uint32_t source = IRQ_SOURCE[0];
+    uint32_t source = IRQ_SOURCE[get_core_id()];
 
     if (source == TIMER_IRQ_SOURCE)
     {
