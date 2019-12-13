@@ -14,12 +14,12 @@
 void tick_irq(void);
 void fatal(RtosErrorId error_id);
 
-uint32_t ticks;
+uint32_t ticks[2];
 
 void
 tick_irq(void)
 {
-    ticks++;
+    ticks[get_core_id()]++;
     machine_timer_tick_isr();
     rtos_timer_tick();
 }
@@ -69,7 +69,7 @@ fn_tg2_a(void)
         volatile int i;
         for (i = 0; i < 10000000; i++) {}
         debug_print("[TG2] task a: yield (");
-        debug_printhex64(ticks);
+        debug_printhex32(ticks[get_core_id()]);
         debug_println(")");
         rtos_yield();
     }
@@ -98,6 +98,73 @@ fn_tg2_c(void)
         rtos_mutex_lock(RTOS_MUTEX_ID_TG2_TEST);
         debug_println("[TG2] task c: got lock!");
         rtos_mutex_unlock(RTOS_MUTEX_ID_TG2_TEST);
+        rtos_yield();
+    }
+}
+
+void
+fn_tg3_a(void)
+{
+    debug_println("[TG3] task a: starting");
+    for (;;)
+    {
+        debug_println("[TG3] task a: sleeping for 50");
+        rtos_sleep(50);
+        debug_println("[TG3] task a: done sleeping");
+
+        rtos_mutex_lock(RTOS_MUTEX_ID_TG3_TEST);
+        rtos_sleep(1);
+        rtos_mutex_unlock(RTOS_MUTEX_ID_TG3_TEST);
+    }
+
+    rtos_signal_wait(RTOS_SIGNAL_SET_EMPTY);
+}
+
+void
+fn_tg4_a(void)
+{
+    debug_print("[TG4]: fn_a started - ");
+    debug_print("task group id: ");
+    debug_printhex8(rtos_taskgroup_current());
+    debug_println("");
+
+    rtos_task_start(RTOS_TASK_ID_TG4_B);
+    rtos_task_start(RTOS_TASK_ID_TG4_C);
+
+    for (;;)
+    {
+        volatile int i;
+        for (i = 0; i < 10000000; i++) {}
+        debug_print("[TG4] task a: yield (");
+        debug_printhex32(ticks[get_core_id()]);
+        debug_println(")");
+        rtos_yield();
+    }
+}
+
+void
+fn_tg4_b(void)
+{
+    debug_println("[TG4] task b: started");
+    for (;;)
+    {
+        debug_println("[TG4] task b: taking lock & sleeping for 2");
+        rtos_mutex_lock(RTOS_MUTEX_ID_TG4_TEST);
+        rtos_sleep(2);
+        rtos_mutex_unlock(RTOS_MUTEX_ID_TG4_TEST);
+        rtos_yield();
+    }
+}
+
+void
+fn_tg4_c(void)
+{
+    debug_println("[TG4] task c: started");
+    for (;;)
+    {
+        rtos_mutex_lock(RTOS_MUTEX_ID_TG4_TEST);
+        debug_println("[TG4] task c: got lock!");
+        rtos_mutex_unlock(RTOS_MUTEX_ID_TG4_TEST);
         rtos_yield();
     }
 }
