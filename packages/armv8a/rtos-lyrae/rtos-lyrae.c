@@ -684,7 +684,7 @@ yield_to(const {{prefix_type}}TaskId to)
 {
     const {{prefix_type}}TaskId from = get_current_task();
 
-    internal_assert(to < {{tasks.length}}, ERROR_ID_INTERNAL_INVALID_ID);
+    internal_assert_task_valid(to);
 
     {{#profiling}}
     {{#profiling.hook_for_task_switch}}
