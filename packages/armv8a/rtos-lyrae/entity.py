@@ -36,6 +36,25 @@ class LyraeModule(Module):
             'mutexes': {},
         }
 
+        # Ensure that all priorities are unique
+        seen_priorities = {}
+        for taskgroup in config['taskgroups']:
+            if taskgroup['priority'] in seen_priorities:
+                template = "Duplicate priority '{}' in taskgroup '{}'. Priority already used in taskgroup '{}'."
+                msg = template.format(
+                    taskgroup['priority'],
+                    taskgroup['name'],
+                    seen_priorities[taskgroup['priority']]['name'],
+                )
+                raise SystemParseError(msg)
+            seen_priorities[taskgroup['priority']] = taskgroup
+
+
+        # Sort by priority and re-index correctly
+        config['taskgroups'].sort(key=lambda tg: tg['priority'])
+        for idx, t in enumerate(config['taskgroups']):
+            t['idx'] = idx
+
         for taskgroup in config['taskgroups']:
             # Ensure that at least one task is runnable.
             if not any(task['start'] for task in taskgroup['tasks']):
