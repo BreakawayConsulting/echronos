@@ -10,15 +10,9 @@ This eChronos release provides support for the Raspberry Pi 3B series of single-
 It should work on both the Raspberry Pi 3B and Raspberry Pi 3B+ models.
 Testing of this release has been performed on the newer Raspberry Pi 3B+ model.
 
-The RTOS variants available in this release do not support executing on multiple cores.
-The RTOS will execute on core zero, while other cores will be held in reset.
-
-However, this release does include rudimentary platform support for multiple core.
-The hellomulti example system demonstrates the platform support for multiple cores.
-This platform support forms the basis for future multi-core aware RTOS variants.
-
-This release includes an initial release of the Lyrae RTOS variant.
-The Lyrae variant supports the new *task group* concept which enables priority based preemption of groups of tasks.
+The Lyrae RTOS variant support multiple cores, and the new *task group* concept.
+Other RTOS variants do not support executing on multiple cores.
+These RTOS variants will execute on core zero, while other cores will be held in reset.
 
 Recommended Hardware
 ---------------------
