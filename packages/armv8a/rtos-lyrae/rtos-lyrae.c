@@ -976,7 +976,7 @@ void
     }
 }
 
-void taskgroup_entry(uint64_t a, uint64_t b, uint64_t c, uint64_t d)
+void taskgroup_entry(void)
 {
     sched_set_cur_index(sched_base_index());
     context_switch_first(get_task_context(sched_base_index()));
