@@ -25,6 +25,30 @@ class LyraeModule(Module):
         config['interrupteventid_size'] = 8
         config['taskid_size'] = 8
 
+        # Ensure all 'cpu' values are correct.
+        for taskgroup in config['taskgroups']:
+            if taskgroup['cpu'] >= config['cpu_count']:
+                msg = "Invalid cpu ({}) for taskgroup '{}'. Must be less than {}.".format(taskgroup['cpu'], taskgroup['name'], config['cpu_count'])
+                raise SystemParseError(msg)
+
+        # Ensure that all priorities are unique
+        seen_priorities = {cpu: {} for cpu in range(config['cpu_count'])}
+        for taskgroup in config['taskgroups']:
+            if taskgroup['priority'] in seen_priorities[taskgroup['cpu']]:
+                template = "Duplicate priority '{}' in taskgroup '{}'. Priority already used in taskgroup '{}'."
+                msg = template.format(
+                    taskgroup['priority'],
+                    taskgroup['name'],
+                    seen_priorities[taskgroup['cpu']][taskgroup['priority']]['name'],
+                )
+                raise SystemParseError(msg)
+            seen_priorities[taskgroup['cpu']][taskgroup['priority']] = taskgroup
+
+        # Sort by priority and re-index correctly
+        config['taskgroups'].sort(key=lambda tg: (tg['cpu'], tg['priority']))
+        for idx, t in enumerate(config['taskgroups']):
+            t['idx'] = idx
+
         task_id_base = 0
         timer_id_base = 0
         mutex_id_base = 0
@@ -35,25 +59,6 @@ class LyraeModule(Module):
             'timers': {},
             'mutexes': {},
         }
-
-        # Ensure that all priorities are unique
-        seen_priorities = {}
-        for taskgroup in config['taskgroups']:
-            if taskgroup['priority'] in seen_priorities:
-                template = "Duplicate priority '{}' in taskgroup '{}'. Priority already used in taskgroup '{}'."
-                msg = template.format(
-                    taskgroup['priority'],
-                    taskgroup['name'],
-                    seen_priorities[taskgroup['priority']]['name'],
-                )
-                raise SystemParseError(msg)
-            seen_priorities[taskgroup['priority']] = taskgroup
-
-
-        # Sort by priority and re-index correctly
-        config['taskgroups'].sort(key=lambda tg: tg['priority'])
-        for idx, t in enumerate(config['taskgroups']):
-            t['idx'] = idx
 
         for taskgroup in config['taskgroups']:
             # Ensure that at least one task is runnable.
@@ -70,6 +75,7 @@ class LyraeModule(Module):
             for task in taskgroup['tasks']:
                 #task['name'] = '{}_{}'.format(taskgroup['name'], task['name'])
                 task['taskgroup_id'] = taskgroup['idx']
+                task['taskgroup'] = taskgroup
 
             # Create builtin signals
             # The RTOS task timer signal is used in the following conditions:
@@ -148,6 +154,16 @@ class LyraeModule(Module):
             config[obj_name] = LengthList(sum([tg[obj_name] for tg in config['taskgroups']], []))
             for idx, t in enumerate(config[obj_name]):
                 t['idx'] = idx
+
+        config["cpus"] = LengthList([
+            {
+                "idx": i,
+                "taskgroups": LengthList([tg for tg in config["taskgroups"] if tg["cpu"] == i]),
+                "tasks": LengthList([t for t in config["tasks"] if t["taskgroup"]["cpu"] == i]),
+                "taskgroup_id_base": min([tg["idx"] for tg in config["taskgroups"] if tg["cpu"] == i]),
+                "taskgroup_id_end": max([tg["idx"] for tg in config["taskgroups"] if tg["cpu"] == i]) + 1,
+            }
+            for i in range(config["cpu_count"])])
 
         return config
 

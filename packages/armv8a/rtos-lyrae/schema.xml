@@ -14,11 +14,13 @@
         <entry name="hook_for_task_switch" type="c_ident" default="" />
     </entry>
     <entry name="interrupteventid_size" type="int" default="8" />
+    <entry name="cpu_count" type="int" default="1" />
 
     <entry name="taskgroups" type="list" auto_index_field="idx">
         <entry name="taskgroup" type="dict">
             <entry name="name" type="ident" />
             <entry name="priority" type="int" />
+            <entry name="cpu" type="int" default="0" />
 
             <entry name="signal_labels" type="list" auto_index_field="idx" default="[]" >
                 <entry name="signal_label" type="dict">

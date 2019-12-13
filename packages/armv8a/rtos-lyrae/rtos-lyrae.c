@@ -213,7 +213,7 @@ static uint64_t stack_{{idx}}[{{stack_size}}] __attribute__((aligned(16)));
 static struct sched sched_tasks;
 static struct signal signal_tasks;
 static volatile uint8_t timer_pending_ticks;
-{{prefix_type}}TicksAbsolute {{prefix_func}}timer_current_ticks;
+{{prefix_type}}TicksAbsolute {{prefix_func}}timer_current_ticks[{{cpus.length}}];
 
 {{#timers.length}}
 static struct timer timers[{{timers.length}}] = {
@@ -267,7 +267,9 @@ static {{prefix_type}}TimerId task_timers[{{tasks.length}}] = {
 };
 {{/timers.length}}
 
-{{prefix_type}}TaskGroupId rtos_internal_current_taskgroup;
+{{prefix_type}}TaskGroupId cpu_current_taskgroup[{{cpus.length}}];
+
+#define rtos_internal_current_taskgroup cpu_current_taskgroup[get_core_id()]
 
 #define context_switch(from, to) rtos_internal_context_switch(to, from)
 #define context_switch_first(to) rtos_internal_context_switch_first(to)
@@ -307,7 +309,7 @@ static inline SchedIndex sched_next_index(SchedIndex cur)
 #define TIMER_PTR(timer_id) (&timers[timer_id])
 {{/timers.length}}
 
-#define current_timeout() ((TicksTimeout) {{prefix_func}}timer_current_ticks)
+#define current_timeout() ((TicksTimeout) {{prefix_func}}timer_current_ticks[get_core_id()])
 
 {{#mutexes.length}}
 #define assert_mutex_valid(mutex) api_assert(mutex >= taskgroup_mutex_base[current_taskgroup] && mutex < taskgroup_mutex_end[current_taskgroup], ERROR_ID_INVALID_ID)
@@ -354,6 +356,9 @@ static {{prefix_type}}TaskId taskgroup_task_end[{{taskgroups.length}}];
 
 static {{prefix_type}}TaskGroupId taskgroup_map[{{tasks.length}}];
 
+static {{prefix_type}}TaskGroupId cpu_taskgroup_base[{{cpus.length}}];
+static {{prefix_type}}TaskGroupId cpu_taskgroup_end[{{cpus.length}}];
+
 extern void _asm_return_from_irq(uint64_t spsr, uint64_t elr, uint64_t sp) __attribute__ ((noreturn));
 extern void rtos_internal_taskgroup_switch(uint64_t *to, uint64_t *from);
 extern void rtos_internal_taskgroup_switch_first(uint64_t *to);
@@ -369,7 +374,9 @@ static struct taskgroup_context taskgroup_contexts[{{taskgroups.length}}];
 void __attribute__ ((noreturn)) rtos_return_from_irq(uint64_t spsr, uint64_t elr, uint64_t sp)
 {
     {{prefix_type}}TaskGroupId tg;
-    for (tg = {{prefix_const}}TASKGROUP_ID_ZERO; tg <= {{prefix_const}}TASKGROUP_ID_MAX; tg++) {
+    CoreId core = get_core_id();
+    for (tg = cpu_taskgroup_base[core]; tg < cpu_taskgroup_end[core]; tg++)
+    {
         if (taskgroup_runnable[tg])
         {
             break;
@@ -587,7 +594,7 @@ taskgroup_schedule(void)
     {{prefix_type}}TaskGroupId tg;
     taskgroup_runnable[current_taskgroup] = false;
 
-    for (tg = current_taskgroup + 1; tg <= {{prefix_const}}TASKGROUP_ID_MAX; tg++)
+    for (tg = current_taskgroup + 1; tg < cpu_taskgroup_end[get_core_id()]; tg++)
     {
         if (taskgroup_runnable[tg])
         {
@@ -651,7 +658,7 @@ mutex_stats_update(const {{prefix_type}}MutexId m, const bool contended, const {
     if ({{prefix_func}}mutex_stats_enabled) {
         mutex_stats[m].mutex_lock_counter += 1;
         if (contended) {
-            {{prefix_type}}TicksRelative wait_time = ({{prefix_type}}TicksRelative)({{prefix_func}}timer_current_ticks - wait_start_ticks);
+            {{prefix_type}}TicksRelative wait_time = ({{prefix_type}}TicksRelative)({{prefix_func}}timer_current_ticks[get_core_id()] - wait_start_ticks);
 
             mutex_stats[m].mutex_lock_contended_counter += 1;
             if (wait_time > mutex_stats[m].mutex_lock_max_wait_time)
@@ -716,6 +723,7 @@ entry_{{name}}(void)
 {
     {{#start}}{{prefix_func}}yield();{{/start}}
     {{^start}}{{prefix_func}}signal_wait({{prefix_const}}SIGNAL_ID__RTOS_UTIL);{{/start}}
+
     {{function}}();
 
     api_error(ERROR_ID_TASK_FUNCTION_RETURNS);
@@ -844,7 +852,7 @@ void
 {{prefix_func}}mutex_lock(const {{prefix_type}}MutexId m)
 {
     bool contended = false;
-    const {{prefix_type}}TicksAbsolute wait_start_ticks = {{prefix_func}}timer_current_ticks;
+    const {{prefix_type}}TicksAbsolute wait_start_ticks = {{prefix_func}}timer_current_ticks[get_core_id()];
 
     assert_mutex_valid(m);
     api_assert(mutexes[m].holder != get_current_task(), ERROR_ID_DEADLOCK);
@@ -961,14 +969,14 @@ void
     /* NOTE: Potential optimisation is to use atomic increment operation here,
      * which avoids requiring interrupt disable around the read
      */
-    {{prefix_func}}timer_current_ticks++;
+    {{prefix_func}}timer_current_ticks[get_core_id()]++;
 
     /* Determine if any of the taskgroups should become runnable */
     /* NOTE: Could optimise by not considering taskgroups with lower priority than
      * the current task group (and then handling at taskgroup_schedule time
      */
-    for (tg = {{prefix_const}}TASKGROUP_ID_ZERO; tg <= {{prefix_const}}TASKGROUP_ID_MAX; tg++) {
-        if ({{prefix_func}}timer_current_ticks > taskgroup_wakeuptick[tg])
+    for (tg = cpu_taskgroup_base[get_core_id()]; tg <= cpu_taskgroup_end[get_core_id()]; tg++) {
+        if ({{prefix_func}}timer_current_ticks[get_core_id()] > taskgroup_wakeuptick[tg])
         {
             taskgroup_runnable[tg] = true;
             taskgroup_wakeuptick[tg] = TICKS_ABSOLUTE_MAX;
@@ -986,10 +994,14 @@ void taskgroup_entry(void)
 uint64_t tg_stack_{{idx}}[256];
 {{/taskgroups}}
 
-void
-{{prefix_func}}start(void)
+{{#cpus}}
+static void
+start_{{idx}}(void)
 {
     uint64_t *context_to;
+
+    cpu_taskgroup_base[{{idx}}] = {{taskgroup_id_base}};
+    cpu_taskgroup_end[{{idx}}] = {{taskgroup_id_end}};
 
 {{#taskgroups}}
     taskgroup_contexts[{{idx}}].spsr = DEFAULT_SPSR;
@@ -1020,6 +1032,19 @@ void
 
 {{/tasks}}
 
+    current_taskgroup = {{taskgroup_id_base}};
+
     context_to = (uint64_t*)&taskgroup_contexts[current_taskgroup];
     rtos_internal_taskgroup_switch_first(context_to);
+}
+{{/cpus}}
+
+void
+{{prefix_func}}start(void)
+{
+    switch(get_core_id()) {
+{{#cpus}}
+        case {{idx}}: return start_{{idx}}();
+{{/cpus}}
+    }
 }

@@ -58,7 +58,7 @@ typedef uint8_t {{prefix_type}}TaskGroupId;
 #define {{prefix_func}}signal_send(task_id, signal) \
     {{prefix_func}}signal_send_set(task_id, signal)
 
-extern {{prefix_type}}TicksAbsolute {{prefix_func}}timer_current_ticks;
+extern {{prefix_type}}TicksAbsolute {{prefix_func}}timer_current_ticks[{{cpus.length}}];
 
 {{#mutex.stats}}
 extern bool {{prefix_func}}mutex_stats_enabled;
