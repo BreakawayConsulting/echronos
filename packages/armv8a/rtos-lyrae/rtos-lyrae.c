@@ -355,7 +355,8 @@ static {{prefix_type}}TaskId taskgroup_task_end[{{taskgroups.length}}];
 static {{prefix_type}}TaskGroupId taskgroup_map[{{tasks.length}}];
 
 extern void _asm_return_from_irq(uint64_t spsr, uint64_t elr, uint64_t sp) __attribute__ ((noreturn));
-extern void _asm_taskgroup_switch(uint64_t *from, uint64_t *to);
+extern void rtos_internal_taskgroup_switch(uint64_t *to, uint64_t *from);
+extern void rtos_internal_taskgroup_switch_first(uint64_t *to);
 
 struct taskgroup_context {
     uint64_t spsr;
@@ -598,7 +599,7 @@ taskgroup_schedule(void)
 
     context_to = (uint64_t*)&taskgroup_contexts[current_taskgroup];
 
-    _asm_taskgroup_switch(context_from, context_to);
+    rtos_internal_taskgroup_switch(context_to, context_from);
 }
 
 static {{prefix_type}}TaskId
@@ -988,6 +989,8 @@ uint64_t tg_stack_{{idx}}[256];
 void
 {{prefix_func}}start(void)
 {
+    uint64_t *context_to;
+
 {{#taskgroups}}
     taskgroup_contexts[{{idx}}].spsr = DEFAULT_SPSR;
     taskgroup_contexts[{{idx}}].elr = (uint64_t) &taskgroup_entry;
@@ -1017,5 +1020,6 @@ void
 
 {{/tasks}}
 
-    context_switch_first(get_task_context({{prefix_const}}TASK_ID_ZERO));
+    context_to = (uint64_t*)&taskgroup_contexts[current_taskgroup];
+    rtos_internal_taskgroup_switch_first(context_to);
 }

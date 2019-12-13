@@ -1,8 +1,9 @@
 /* Copyright (c) 2019, Breakaway Consulting Pty. Ltd. */
 
-.global _asm_taskgroup_switch
-.type entry,#function
-_asm_taskgroup_switch:
+.global rtos_internal_taskgroup_switch
+.type rtos_internal_taskgroup_switch,#function
+/* void rtos_internal_taskgroup_switch(context_t *to, context_t *from); */
+rtos_internal_taskgroup_switch:
       /* Save current task group first */
         SUB     sp, sp, #256
         STP     x0, x1, [sp]
@@ -26,13 +27,18 @@ _asm_taskgroup_switch:
         MOV     x3, x30
         MOV     x4, sp
 
-        STR     x2, [x0]
-        STR     x3, [x0, #8]
-        STR     x4, [x0, #16]
+        STR     x2, [x1]
+        STR     x3, [x1, #8]
+        STR     x4, [x1, #16]
 
-        LDR     x2, [x1]
-        LDR     x3, [x1, #8]
-        LDR     x4, [x1, #16]
+.global rtos_internal_taskgroup_switch_first
+.type rtos_internal_taskgroup_switch_first,#function
+/* void rtos_internal_taskgroup_switch_first(context_t *to); */
+rtos_internal_taskgroup_switch_first:
+
+        LDR     x2, [x0]
+        LDR     x3, [x0, #8]
+        LDR     x4, [x0, #16]
         MSR     spsr_el2, x2
         MSR     elr_el2, x3
         MOV     sp, x4
