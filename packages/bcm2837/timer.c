@@ -6,8 +6,10 @@
         <header path="../rtos-example/machine-timer.h" code_gen="template" />
     </headers>
 </module>*/
-
+#include <stdbool.h>
 #include <stdint.h>
+
+#include "system.h"
 #include "machine-timer.h"
 
 #define TIMERS_INTERRUPT_CONTROL (*(volatile uint32_t (*)[4])(0x40000040))
@@ -28,10 +30,8 @@ static inline void write_cntp_tval_el0(uint64_t r) {
 void
 machine_timer_start(__attribute__((unused)) void (*application_timer_isr)(void))
 {
-    /* Enable the timer interrupt - currently this module only supports single CPU
-     * so interrupt is only enabled on core #0.
-     */
-    TIMERS_INTERRUPT_CONTROL[0] = 0x2;
+    /* Enable the timer interrupt (on the current core) */
+    TIMERS_INTERRUPT_CONTROL[get_core_id()] = 0x2;
 
     write_cntp_ctl_el0(1); /* enabled, not masked */
     write_cntp_tval_el0(TIMER_INTERVAL);
