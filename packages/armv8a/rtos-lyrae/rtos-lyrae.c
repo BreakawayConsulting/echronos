@@ -72,8 +72,6 @@
 #define ERROR_ID_MPU_SANITATION_FAILURE (({{prefix_type}}ErrorId) UINT8_C(40))
 #define ERROR_ID_MPU_INTERNAL_INVALID_REGION_INDEX (({{prefix_type}}ErrorId) UINT8_C(41))
 #define ERROR_ID_INTERNAL_CURRENT_TASKGROUP_INVALID (({{prefix_type}}ErrorId) UINT8_C(42))
-#define ERROR_ID_NO_RUNNABLE_TASKGROUPS (({{prefix_type}}ErrorId) UINT8_C(43))
-
 
 #define tasks rtos_internal_tasks
 
@@ -374,22 +372,25 @@ static struct taskgroup_context taskgroup_contexts[{{taskgroups.length}}];
 void __attribute__ ((noreturn)) rtos_return_from_irq(uint64_t spsr, uint64_t elr, uint64_t sp)
 {
     {{prefix_type}}TaskGroupId tg;
+    {{prefix_type}}TaskGroupId next_tg = current_taskgroup;
+
     CoreId core = get_core_id();
     for (tg = cpu_taskgroup_base[core]; tg < cpu_taskgroup_end[core]; tg++)
     {
         if (taskgroup_runnable[tg])
         {
+            next_tg = tg;
             break;
         }
     }
 
-    if (current_taskgroup != tg)
+    if (current_taskgroup != next_tg)
     {
         taskgroup_contexts[current_taskgroup].spsr = spsr;
         taskgroup_contexts[current_taskgroup].elr = elr;
         taskgroup_contexts[current_taskgroup].sp = sp;
 
-        current_taskgroup = tg;
+        current_taskgroup = next_tg;
 
         spsr = taskgroup_contexts[current_taskgroup].spsr;
         elr = taskgroup_contexts[current_taskgroup].elr;
@@ -593,20 +594,29 @@ taskgroup_schedule(void)
 
     {{prefix_type}}TaskGroupId tg;
     taskgroup_runnable[current_taskgroup] = false;
+    bool found = false;
 
     for (tg = current_taskgroup + 1; tg < cpu_taskgroup_end[get_core_id()]; tg++)
     {
         if (taskgroup_runnable[tg])
         {
             current_taskgroup = tg;
+            found = true;
+            break;
         }
     }
 
-    internal_assert(taskgroup_runnable[current_taskgroup], ERROR_ID_NO_RUNNABLE_TASKGROUPS);
-
-    context_to = (uint64_t*)&taskgroup_contexts[current_taskgroup];
-
-    rtos_internal_taskgroup_switch(context_to, context_from);
+    if (found)
+    {
+        context_to = (uint64_t*)&taskgroup_contexts[current_taskgroup];
+        rtos_internal_taskgroup_switch(context_to, context_from);
+    }
+    else
+    {
+        interrupt_disable();
+        asm volatile("wfi");
+        interrupt_enable();
+    }
 }
 
 static {{prefix_type}}TaskId
