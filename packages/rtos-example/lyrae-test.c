@@ -72,6 +72,7 @@ fn_tg2_a(void)
         debug_printhex32(ticks[get_core_id()]);
         debug_println(")");
         rtos_yield();
+        rtos_sleep(20);
     }
 }
 
@@ -86,6 +87,7 @@ fn_tg2_b(void)
         rtos_sleep(2);
         rtos_mutex_unlock(RTOS_MUTEX_ID_TG2_TEST);
         rtos_yield();
+        rtos_sleep(20);
     }
 }
 
@@ -99,6 +101,7 @@ fn_tg2_c(void)
         debug_println("[TG2] task c: got lock!");
         rtos_mutex_unlock(RTOS_MUTEX_ID_TG2_TEST);
         rtos_yield();
+        rtos_sleep(20);
     }
 }
 
@@ -139,6 +142,7 @@ fn_tg4_a(void)
         debug_printhex32(ticks[get_core_id()]);
         debug_println(")");
         rtos_yield();
+        rtos_sleep(10);
     }
 }
 
@@ -153,6 +157,7 @@ fn_tg4_b(void)
         rtos_sleep(2);
         rtos_mutex_unlock(RTOS_MUTEX_ID_TG4_TEST);
         rtos_yield();
+        rtos_sleep(10);
     }
 }
 
@@ -166,6 +171,7 @@ fn_tg4_c(void)
         debug_println("[TG4] task c: got lock!");
         rtos_mutex_unlock(RTOS_MUTEX_ID_TG4_TEST);
         rtos_yield();
+        rtos_sleep(5);
     }
 }
 
