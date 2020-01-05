@@ -53,6 +53,7 @@
 #include "debug.h"
 
 #define IRQ_SOURCE (*(volatile uint32_t (*)[4])(0x40000060))
+#define GPU_INTERRUPT_ROUTING (*(volatile uint32_t *)0x4000000C)
 
 #define TIMER_IRQ_SOURCE 0x002
 #define GPU_IRQ_SOURCE 0x100
@@ -185,6 +186,12 @@ static void initialize_mmu(void)
     write_sctlr_el2(sctrl_el2);
 }
 
+static void initialize_irq_routing(void)
+{
+    /* All GPU interrupts (IRQ and FIQ) go to core zero */
+    GPU_INTERRUPT_ROUTING = 0x0;
+}
+
 void bcm2837_init(void)
 {
     CoreId core = get_core_id();
@@ -201,6 +208,7 @@ void bcm2837_init(void)
 
     if (core == CORE_ID_0)
     {
+        initialize_irq_routing();
         start_secondary_cores();
     }
 }
