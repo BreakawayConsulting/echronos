@@ -21,6 +21,7 @@
     </module>
     <module name="bcm2837.platform">
       <tick_handler>tick_irq</tick_handler>
+      <gpu_handler>gpu_irq</gpu_handler>
       <irq_return>rtos_return_from_irq</irq_return>
     </module>
     <module name="bcm2837.timer"/>
