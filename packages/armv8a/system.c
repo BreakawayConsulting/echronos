@@ -22,7 +22,6 @@
 
 void spinlock_acquire(Spinlock *l)
 {
-    asm volatile("msr daifset, #2");
     while (__atomic_test_and_set(l, __ATOMIC_ACQUIRE)) {
         asm volatile("wfe");
     }
@@ -33,5 +32,4 @@ void spinlock_release(Spinlock *l)
 {
     __atomic_clear(l, __ATOMIC_RELEASE);
     asm volatile("sev");
-    asm volatile("msr daifclr, #2");
 }
