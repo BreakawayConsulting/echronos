@@ -41,6 +41,7 @@
   <code_gen>template</code_gen>
   <schema>
     <entry name="tick_handler" type="c_ident" optional="true" />
+    <entry name="gpu_handler" type="c_ident" optional="true" />
     <entry name="irq_return" type="c_ident" default="_asm_return_from_irq" />
   </schema>
 </module>*/
@@ -53,7 +54,8 @@
 
 #define IRQ_SOURCE (*(volatile uint32_t (*)[4])(0x40000060))
 
-#define TIMER_IRQ_SOURCE 2
+#define TIMER_IRQ_SOURCE 0x002
+#define GPU_IRQ_SOURCE 0x100
 
 #define CORE_COUNT 4
 
@@ -67,7 +69,14 @@ extern uint64_t _vector_table;
 extern void _asm_entry(void) __attribute__ ((noreturn));
 extern void {{irq_return}}(uint64_t spsr, uint64_t elr, uint64_t sp) __attribute__ ((noreturn));
 
-extern void tick_irq(void);
+{{#tick_handler}}
+extern void {{tick_handler}}(void);
+{{/tick_handler}}
+
+{{#gpu_handler}}
+extern void {{gpu_handler}}(void);
+{{/gpu_handler}}
+
 
 /* Level 1 page table has a single entry covering 1GB. Points
    to level2 pagetable with 512 2MB entries.
@@ -214,15 +223,23 @@ __attribute__ ((noreturn)) void abort_handler(uint64_t type, uint64_t esr, uint6
 
  __attribute__ ((noreturn)) void irq_handler(uint64_t spsr, uint64_t elr, uint64_t sp)
 {
-{{#tick_handler}}
+    /* Note: Currently assumes at least one handler has been set -- if not
+    this line of code will trigger a compiler warning. */
     uint32_t source = IRQ_SOURCE[get_core_id()];
 
-    if (source == TIMER_IRQ_SOURCE)
+{{#tick_handler}}
+    if (source & TIMER_IRQ_SOURCE)
     {
         {{tick_handler}}();
     }
 {{/tick_handler}}
-    /* Other interrupt sources are currently ignored. */
+
+{{#gpu_handler}}
+    if (source & GPU_IRQ_SOURCE)
+    {
+        {{gpu_handler}}();
+    }
+{{/gpu_handler}}
 
     {{irq_return}}(spsr, elr, sp);
 }
