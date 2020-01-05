@@ -617,10 +617,27 @@ def xml2dict(element, schema=None):
     def resolve_proxies(dct):
         # Find all ObjectProxies and resolve them.
         for key, val in ((k, v) for k, v in util.config_traverse(dct) if isinstance(v, ObjectProxy)):
+            container = dct
+            container_stack = [container]
+            for key_part in key[:-1]:
+                container = container[key_part]
+                if isinstance(container, dict):
+                    container_stack.append(container)
+
+            for container in reversed(container_stack):
+                if val.group in container:
+                    objects = container[val.group]
+                    break
+            else:
+                msg = "Can't find expected object group '{}'".format(val.group)
+                raise SystemParseError(xml_error_str(val.element, msg))
+
             try:
-                real_val = util.list_search(dct[val.group], 'name', val.name)
+                real_val = util.list_search(objects, 'name', val.name)
             except KeyError:
-                raise SystemParseError(xml_error_str(val.element, "Can't find object named '{}'".format(val.name)))
+                msg =  "Can't find object named '{}' in group '{}'".format(val.name, val.group)
+                raise SystemParseError(xml_error_str(val.element, msg))
+
             util.config_set(dct, key, real_val)
 
     def get_dict_val(element, dict_type):
