@@ -238,6 +238,7 @@ __attribute__ ((noreturn)) void abort_handler(uint64_t type, uint64_t esr, uint6
 {{#tick_handler}}
     if (source & TIMER_IRQ_SOURCE)
     {
+        source &= ~TIMER_IRQ_SOURCE;
         {{tick_handler}}();
     }
 {{/tick_handler}}
@@ -245,9 +246,15 @@ __attribute__ ((noreturn)) void abort_handler(uint64_t type, uint64_t esr, uint6
 {{#gpu_handler}}
     if (source & GPU_IRQ_SOURCE)
     {
+        source &= ~GPU_IRQ_SOURCE;
         {{gpu_handler}}();
     }
 {{/gpu_handler}}
+
+    if (source != 0)
+    {
+        abort_handler(0xff, 0, elr, spsr, sp);
+    }
 
     {{irq_return}}(spsr, elr, sp);
 }
