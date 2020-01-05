@@ -58,6 +58,7 @@ class LyraeModule(Module):
             'tasks': {},
             'timers': {},
             'mutexes': {},
+            'interrupt_events': {},
         }
 
         for taskgroup in config['taskgroups']:
@@ -136,7 +137,10 @@ class LyraeModule(Module):
             mutex_id_base += len(taskgroup['mutexes'])
 
             # Validate names
-            for obj_name, singular in zip(('tasks', 'timers', 'mutexes'), ("task", "timer", "mutex")):
+            for obj_name, singular in zip(
+                ('tasks', 'timers', 'mutexes', 'interrupt_events'),
+                ("task", "timer", "mutex", "interrupt_event")
+            ):
                 for obj in taskgroup[obj_name]:
                     if obj['name'] in all_obj_names[obj_name]:
                         template = "Duplicate {} name '{}' in taskgroup '{}'. Name already used in taskgroup '{}'."
@@ -150,7 +154,7 @@ class LyraeModule(Module):
                     all_obj_names[obj_name][obj['name']] = taskgroup
 
         # Merge all taskgroup objects into a single list, and re-index.
-        for obj_name in ('tasks', 'timers', 'mutexes', 'signal_sets'):
+        for obj_name in ('tasks', 'timers', 'mutexes', 'signal_sets', 'interrupt_events'):
             config[obj_name] = LengthList(sum([tg[obj_name] for tg in config['taskgroups']], []))
             for idx, t in enumerate(config[obj_name]):
                 t['idx'] = idx
