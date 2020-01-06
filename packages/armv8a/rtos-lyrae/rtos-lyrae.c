@@ -372,7 +372,7 @@ static {{prefix_type}}TaskGroupId taskgroup_map[{{tasks.length}}];
 {{#interrupt_events.length}}
 static {{prefix_type}}TaskGroupId interrupt_event_taskgroup_map[{{interrupt_events.length}}] = {
 {{#interrupt_events}}
-    {{taskgroup_id}}
+    {{taskgroup_id}},
 {{/interrupt_events}}
 };
 {{/interrupt_events.length}}
