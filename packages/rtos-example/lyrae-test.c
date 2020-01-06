@@ -219,8 +219,9 @@ fn_tg1_a(void)
     for (;;) {
         debug_println("[TG1] task a: waiting for taskgroup wakeup event");
         rtos_signal_wait(RTOS_SIGNAL_ID_WAKEUP);
-        debug_println("[TG1] task a: done waiting waking up lo");
+        debug_println("[TG1] task a: done waiting waking up lo and tg5");
         rtos_taskgroup_event_raise(RTOS_TASKGROUP_EVENT_ID_WAKEUPLO);
+        rtos_taskgroup_event_raise(RTOS_TASKGROUP_EVENT_ID_WAKEUP_TG5);
         debug_println("[TG1] task a: spinning for a bit");
         for (i = 0; i < 100000; i++) {}
         debug_println("[TG1] task a: finished spinning");
@@ -298,7 +299,7 @@ fn_tg2_c(void)
 void
 fn_tg2_d(void)
 {
-   debug_println("[TG2] task c: started");
+   debug_println("[TG2] task d: started");
     for (;;)
     {
         debug_println("[TG2] task d: waiting for taskgroup wakeuplo event");
@@ -374,6 +375,18 @@ fn_tg4_c(void)
         rtos_mutex_unlock(RTOS_MUTEX_ID_TG4_TEST);
         rtos_yield();
         rtos_sleep(5);
+    }
+}
+
+void
+fn_tg5_a(void)
+{
+    debug_println("[TG5] task a: started");
+    for (;;)
+    {
+        debug_println("[TG5] task a: waiting for taskgroup wakeup_tg5 event");
+        rtos_signal_wait(RTOS_SIGNAL_ID_WAKEUP_TG5);
+        debug_println("[TG5] task a: done waiting");
     }
 }
 

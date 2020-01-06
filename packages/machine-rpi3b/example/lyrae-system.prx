@@ -8,7 +8,7 @@
     <module name="machine-rpi3b.build" />
 
     <module name="armv8a.startup">
-      <cpu_count>2</cpu_count>
+      <cpu_count>3</cpu_count>
       <platform_init>bcm2837_init</platform_init>
     </module>
     <module name="armv8a.vectable" />
@@ -36,7 +36,7 @@
       <api_asserts>true</api_asserts>
       <internal_asserts>true</internal_asserts>
       <fatal_error>fatal</fatal_error>
-      <cpu_count>2</cpu_count>
+      <cpu_count>3</cpu_count>
       <mutex>
         <stats>true</stats>
       </mutex>
@@ -198,6 +198,37 @@
               <name>tg4_test</name>
             </mutex>
           </mutexes>
+        </taskgroup>
+
+        <taskgroup>
+          <name>tg5</name>
+          <cpu>2</cpu>
+          <priority>1</priority>
+
+          <tasks>
+            <task>
+              <name>tg5_a</name>
+              <function>fn_tg5_a</function>
+              <stack_size>8000</stack_size>
+              <start>true</start>
+            </task>
+          </tasks>
+
+          <signal_labels>
+            <signal_label>
+              <name>wakeup_tg5</name>
+              <global>true</global>
+            </signal_label>
+          </signal_labels>
+
+          <taskgroup_events>
+            <taskgroup_event>
+              <name>wakeup_tg5</name>
+              <task>tg5_a</task>
+              <sig_set>wakeup_tg5</sig_set>
+            </taskgroup_event>
+          </taskgroup_events>
+
         </taskgroup>
 
       </taskgroups>
