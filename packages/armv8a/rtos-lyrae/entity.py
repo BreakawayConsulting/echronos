@@ -78,6 +78,10 @@ class LyraeModule(Module):
                 task['taskgroup_id'] = taskgroup['idx']
                 task['taskgroup'] = taskgroup
 
+            for interrupt_event in taskgroup['interrupt_events']:
+                interrupt_event['taskgroup_id'] = taskgroup['idx']
+                interrupt_event['taskgroup'] = taskgroup
+
             # Create builtin signals
             # The RTOS task timer signal is used in the following conditions:
             #   1. To notify the task when a mutex is unlocked.

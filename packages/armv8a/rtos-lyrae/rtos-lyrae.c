@@ -140,6 +140,13 @@ struct mutex_stat {
 {{/mutex.stats}}
 {{/mutexes.length}}
 
+{{#interrupt_events.length}}
+struct interrupt_event_handler {
+    {{prefix_type}}TaskId task;
+    {{prefix_type}}SignalSet sig_set;
+};
+{{/interrupt_events.length}}
+
 struct task
 {
     context_t ctx;
@@ -265,6 +272,14 @@ static {{prefix_type}}TimerId task_timers[{{tasks.length}}] = {
 };
 {{/timers.length}}
 
+{{#interrupt_events.length}}
+static struct interrupt_event_handler interrupt_events[{{interrupt_events.length}}] = {
+{{#interrupt_events}}
+    { {{prefix_const}}TASK_ID_{{task.name|u}}, {{prefix_const}}SIGNAL_SET_{{sig_set|u}} },
+{{/interrupt_events}}
+};
+{{/interrupt_events.length}}
+
 {{prefix_type}}TaskGroupId cpu_current_taskgroup[{{cpus.length}}];
 
 #define rtos_internal_current_taskgroup cpu_current_taskgroup[get_core_id()]
@@ -354,6 +369,14 @@ static {{prefix_type}}TaskId taskgroup_task_end[{{taskgroups.length}}];
 
 static {{prefix_type}}TaskGroupId taskgroup_map[{{tasks.length}}];
 
+{{#interrupt_events.length}}
+static {{prefix_type}}TaskGroupId interrupt_event_taskgroup_map[{{interrupt_events.length}}] = {
+{{#interrupt_events}}
+    {{taskgroup_id}}
+{{/interrupt_events}}
+};
+{{/interrupt_events.length}}
+
 static {{prefix_type}}TaskGroupId cpu_taskgroup_base[{{cpus.length}}];
 static {{prefix_type}}TaskGroupId cpu_taskgroup_end[{{cpus.length}}];
 
@@ -368,6 +391,8 @@ struct taskgroup_context {
 };
 
 static struct taskgroup_context taskgroup_contexts[{{taskgroups.length}}];
+
+static volatile uint64_t interrupt_event[{{taskgroups.length}}];
 
 void __attribute__ ((noreturn)) rtos_return_from_irq(uint64_t spsr, uint64_t elr, uint64_t sp)
 {
@@ -585,6 +610,34 @@ timers_process(void)
 }
 {{/timers.length}}
 
+{{#interrupt_events.length}}
+static void
+interrupt_event_handle(const {{prefix_type}}InterruptEventId interrupt_event_id)
+{
+    internal_assert(interrupt_event_id < {{interrupt_events.length}}, ERROR_ID_INTERNAL_INVALID_ID);
+    internal_assert_task_valid(interrupt_events[interrupt_event_id].task);
+    signal_send_set(interrupt_events[interrupt_event_id].task, interrupt_events[interrupt_event_id].sig_set);
+}
+
+static void
+interrupt_events_process(void)
+{
+    uint64_t tmp;
+
+    interrupt_disable();
+    tmp = interrupt_event[current_taskgroup];
+    interrupt_event[current_taskgroup] = 0;
+    interrupt_enable();
+
+    while (tmp != 0)
+    {
+        const {{prefix_type}}InterruptEventId i = __builtin_ffs(tmp) - 1;
+        interrupt_event_handle(i);
+        tmp &= ~(1U << i);
+    }
+}
+{{/interrupt_events.length}}
+
 
 static void
 taskgroup_schedule(void)
@@ -629,6 +682,9 @@ get_next(void)
 {{#timers.length}}
         timers_process();
 {{/timers.length}}
+{{#interrupt_events.length}}
+        interrupt_events_process();
+{{/interrupt_events.length}}
         next = sched_get_next();
 
         if (next == TASK_ID_NONE)
@@ -993,6 +1049,16 @@ void
         }
     }
 }
+
+{{#interrupt_events.length}}
+void
+{{prefix_func}}interrupt_event_raise(const {{prefix_type}}InterruptEventId interrupt_event_id)
+{
+    {{prefix_type}}TaskGroupId tg = interrupt_event_taskgroup_map[interrupt_event_id];
+    interrupt_event[tg] |= 1 << interrupt_event_id;
+    taskgroup_runnable[tg] = true;
+}
+{{/interrupt_events.length}}
 
 void taskgroup_entry(void)
 {
