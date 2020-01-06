@@ -214,11 +214,17 @@ gpio_init(void)
 void
 fn_tg1_a(void)
 {
+    volatile int i;
     debug_println("[TG1] task a: starting");
     for (;;) {
-        debug_println("[TG1] task a: sleeping for 50");
-        rtos_sleep(50);
-        debug_println("[TG1] task a: done sleeping");
+        debug_println("[TG1] task a: waiting for taskgroup wakeup event");
+        rtos_signal_wait(RTOS_SIGNAL_ID_WAKEUP);
+        debug_println("[TG1] task a: done waiting waking up lo");
+        rtos_taskgroup_event_raise(RTOS_TASKGROUP_EVENT_ID_WAKEUPLO);
+        debug_println("[TG1] task a: spinning for a bit");
+        for (i = 0; i < 100000; i++) {}
+        debug_println("[TG1] task a: finished spinning");
+
 
         rtos_mutex_lock(RTOS_MUTEX_ID_TG1_TEST);
         rtos_sleep(1);
@@ -240,6 +246,7 @@ fn_tg2_a(void)
 
     rtos_task_start(RTOS_TASK_ID_TG2_B);
     rtos_task_start(RTOS_TASK_ID_TG2_C);
+    rtos_task_start(RTOS_TASK_ID_TG2_D);
 
     for (;;)
     {
@@ -249,6 +256,8 @@ fn_tg2_a(void)
         debug_printhex32(ticks[get_core_id()]);
         debug_println(")");
         rtos_yield();
+        debug_println("[TG2] task a: raising taskgroup wakeup event");
+        rtos_taskgroup_event_raise(RTOS_TASKGROUP_EVENT_ID_WAKEUP);
         rtos_sleep(20);
     }
 }
@@ -265,7 +274,7 @@ fn_tg2_b(void)
         rtos_mutex_unlock(RTOS_MUTEX_ID_TG2_TEST);
         rtos_yield();
 
-        rtos_signal_wait_set(RTOS_SIGNAL_ID_TG2_GPIO);
+        rtos_signal_wait(RTOS_SIGNAL_ID_TG2_GPIO);
         debug_print("[TG2] task b: GPIO count: ");
         debug_printhex32(gpio_count);
         debug_println("");
@@ -283,6 +292,18 @@ fn_tg2_c(void)
         rtos_mutex_unlock(RTOS_MUTEX_ID_TG2_TEST);
         rtos_yield();
         rtos_sleep(20);
+    }
+}
+
+void
+fn_tg2_d(void)
+{
+   debug_println("[TG2] task c: started");
+    for (;;)
+    {
+        debug_println("[TG2] task d: waiting for taskgroup wakeuplo event");
+        rtos_signal_wait(RTOS_SIGNAL_ID_WAKEUPLO);
+        debug_println("[TG2] task d: done waiting");
     }
 }
 

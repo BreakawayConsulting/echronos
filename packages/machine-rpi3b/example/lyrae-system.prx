@@ -61,6 +61,21 @@
             </mutex>
           </mutexes>
 
+          <signal_labels>
+            <signal_label>
+              <name>wakeup</name>
+              <global>true</global>
+            </signal_label>
+          </signal_labels>
+
+          <taskgroup_events>
+            <taskgroup_event>
+              <name>wakeup</name>
+              <task>tg1_a</task>
+              <sig_set>wakeup</sig_set>
+            </taskgroup_event>
+          </taskgroup_events>
+
         </taskgroup>
 
         <taskgroup>
@@ -87,15 +102,24 @@
               <function>fn_tg2_c</function>
               <stack_size>8000</stack_size>
             </task>
+
+            <task>
+              <name>tg2_d</name>
+              <function>fn_tg2_d</function>
+              <stack_size>8000</stack_size>
+            </task>
           </tasks>
 
           <signal_labels>
-
             <signal_label>
               <name>tg2_gpio</name>
               <global>true</global>
             </signal_label>
 
+            <signal_label>
+              <name>wakeuplo</name>
+              <global>true</global>
+            </signal_label>
           </signal_labels>
 
           <mutexes>
@@ -111,6 +135,14 @@
               <sig_set>tg2_gpio</sig_set>
             </interrupt_event>
           </interrupt_events>
+
+          <taskgroup_events>
+            <taskgroup_event>
+              <name>wakeuplo</name>
+              <task>tg2_d</task>
+              <sig_set>wakeuplo</sig_set>
+            </taskgroup_event>
+          </taskgroup_events>
 
         </taskgroup>
 
