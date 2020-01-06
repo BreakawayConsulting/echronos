@@ -52,13 +52,24 @@
 #include "system.h"
 #include "debug.h"
 
-#define IRQ_SOURCE (*(volatile uint32_t (*)[4])(0x40000060))
+#define CORE_COUNT 4
+#define MAILBOX_COUNT 4
+
 #define GPU_INTERRUPT_ROUTING (*(volatile uint32_t *)0x4000000C)
+#define MAILBOX_INTERRUPT_CONTROL (*(volatile uint32_t (*)[CORE_COUNT])(0x40000050))
+#define IRQ_SOURCE (*(volatile uint32_t (*)[CORE_COUNT])(0x40000060))
+#define MAILBOX_SET  (*(volatile uint32_t (*)[CORE_COUNT][MAILBOX_COUNT])(0x40000080))
+#define MAILBOX_RD_CLR (*(volatile uint32_t (*)[CORE_COUNT][MAILBOX_COUNT])(0x400000C0))
 
 #define TIMER_IRQ_SOURCE 0x002
+#define MAILBOX_0_IRQ_SOURCE 0x010
+#define MAILBOX_1_IRQ_SOURCE 0x020
+#define MAILBOX_2_IRQ_SOURCE 0x040
+#define MAILBOX_3_IRQ_SOURCE 0x080
 #define GPU_IRQ_SOURCE 0x100
-
-#define CORE_COUNT 4
+#define PMU_IRQ_SOURCE 0x200
+#define AXI_OUTSTANDING_IRQ_SOURCE 0x400
+#define LOCAL_TIMER_IRQ_SOURCE 0x800
 
 #define PAGE_TABLE_2_ENTRY_COUNT 512
 #define PAGE_TABLE_2_DEVICE_ENTRY_IDX 400 //504
@@ -78,7 +89,6 @@ extern void {{tick_handler}}(void);
 extern void {{gpu_handler}}(void);
 {{/gpu_handler}}
 
-
 /* Level 1 page table has a single entry covering 1GB. Points
    to level2 pagetable with 512 2MB entries.
    This covers all the useful physical address space.
@@ -87,6 +97,11 @@ extern void {{gpu_handler}}(void);
 static uint64_t pagetable1[2] __attribute__ ((aligned(4096)));
 static uint64_t pagetable2a[PAGE_TABLE_2_ENTRY_COUNT] __attribute__ ((aligned(4096)));
 static uint64_t pagetable2b[PAGE_TABLE_2_ENTRY_COUNT] __attribute__ ((aligned(4096)));
+
+void core_notify(CoreId core_id)
+{
+    MAILBOX_SET[core_id][0] = 1;
+}
 
 static void initialize_vector_table(void)
 {
@@ -206,6 +221,8 @@ void bcm2837_init(void)
     initialize_exceptions();
     initialize_mmu();
 
+    MAILBOX_INTERRUPT_CONTROL[core] = 1;
+
     if (core == CORE_ID_0)
     {
         initialize_irq_routing();
@@ -234,6 +251,7 @@ __attribute__ ((noreturn)) void abort_handler(uint64_t type, uint64_t esr, uint6
     /* Note: Currently assumes at least one handler has been set -- if not
     this line of code will trigger a compiler warning. */
     uint32_t source = IRQ_SOURCE[get_core_id()];
+    CoreId core_id = get_core_id();
 
 {{#tick_handler}}
     if (source & TIMER_IRQ_SOURCE)
@@ -250,6 +268,12 @@ __attribute__ ((noreturn)) void abort_handler(uint64_t type, uint64_t esr, uint6
         {{gpu_handler}}();
     }
 {{/gpu_handler}}
+
+    if (source & MAILBOX_0_IRQ_SOURCE)
+    {
+        source &= ~MAILBOX_0_IRQ_SOURCE;
+        MAILBOX_RD_CLR[core_id][0] = MAILBOX_RD_CLR[core_id][0];
+    }
 
     if (source != 0)
     {
