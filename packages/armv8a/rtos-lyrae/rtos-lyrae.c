@@ -163,6 +163,8 @@ extern void rtos_internal_context_switch(context_t *, context_t *);
 extern void rtos_internal_context_switch_first(context_t *);
 extern void rtos_internal_trampoline(void);
 
+extern void core_notify(CoreId core);
+
 extern /*@noreturn@*/ void fatal({{prefix_type}}ErrorId error_id);
 
 {{#tasks}}
@@ -399,6 +401,12 @@ static {{prefix_type}}TaskGroupId taskgroup_event_taskgroup_map[{{taskgroup_even
 {{/taskgroup_events}}
 };
 {{/taskgroup_events.length}}
+
+static {{prefix_type}}TaskGroupId taskgroup_core_map[{{taskgroups.length}}] = {
+{{#taskgroups}}
+    {{cpu}},
+{{/taskgroups}}
+};
 
 static {{prefix_type}}TaskGroupId cpu_taskgroup_base[{{cpus.length}}];
 static {{prefix_type}}TaskGroupId cpu_taskgroup_end[{{cpus.length}}];
@@ -1117,10 +1125,16 @@ void
 void
 {{prefix_func}}taskgroup_event_raise(const {{prefix_type}}InterruptEventId taskgroup_event_id)
 {
+    CoreId current_core = get_core_id();
     {{prefix_type}}TaskGroupId tg = taskgroup_event_taskgroup_map[taskgroup_event_id];
+    CoreId tgcore = taskgroup_core_map[tg];
     taskgroup_event[tg] |= 1 << taskgroup_event_id;
     taskgroup_runnable[tg] = true;
-    if (tg < current_taskgroup)
+    if (tgcore != current_core)
+    {
+        core_notify(tgcore);
+    }
+    else if (tg < current_taskgroup)
     {
         taskgroup_schedule();
     }
