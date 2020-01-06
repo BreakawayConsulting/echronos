@@ -83,6 +83,7 @@ gpu_irq(void)
             if (event & GPIO_PIN_23_MASK)
             {
                 gpio_count++;
+                rtos_interrupt_event_raise(RTOS_INTERRUPT_EVENT_ID_TG2_GPIO);
             }
             GPEDS[0] = event;
         }
@@ -259,14 +260,15 @@ fn_tg2_b(void)
     for (;;)
     {
         debug_println("[TG2] task b: taking lock & sleeping for 2");
-        debug_print("[TG2] task b: GPIO count: ");
-        debug_printhex32(gpio_count);
-        debug_println("");
         rtos_mutex_lock(RTOS_MUTEX_ID_TG2_TEST);
         rtos_sleep(2);
         rtos_mutex_unlock(RTOS_MUTEX_ID_TG2_TEST);
         rtos_yield();
-        rtos_sleep(20);
+
+        rtos_signal_wait_set(RTOS_SIGNAL_ID_TG2_GPIO);
+        debug_print("[TG2] task b: GPIO count: ");
+        debug_printhex32(gpio_count);
+        debug_println("");
     }
 }
 

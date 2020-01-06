@@ -89,11 +89,29 @@
             </task>
           </tasks>
 
+          <signal_labels>
+
+            <signal_label>
+              <name>tg2_gpio</name>
+              <global>true</global>
+            </signal_label>
+
+          </signal_labels>
+
           <mutexes>
             <mutex>
               <name>tg2_test</name>
             </mutex>
           </mutexes>
+
+          <interrupt_events>
+            <interrupt_event>
+              <name>tg2_gpio</name>
+              <task>tg2_b</task>
+              <sig_set>tg2_gpio</sig_set>
+            </interrupt_event>
+          </interrupt_events>
+
         </taskgroup>
 
         <taskgroup>
