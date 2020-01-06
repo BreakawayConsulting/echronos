@@ -23,6 +23,7 @@ class LyraeModule(Module):
         # These are configurable in the code, but for simplicitly they are not supported as
         # user configuration at this stage.
         config['interrupteventid_size'] = 8
+        config['taskgroupeventid_size'] = 8
         config['taskid_size'] = 8
 
         # Ensure all 'cpu' values are correct.
@@ -59,6 +60,7 @@ class LyraeModule(Module):
             'timers': {},
             'mutexes': {},
             'interrupt_events': {},
+            'taskgroup_events': {},
         }
 
         for taskgroup in config['taskgroups']:
@@ -81,6 +83,10 @@ class LyraeModule(Module):
             for interrupt_event in taskgroup['interrupt_events']:
                 interrupt_event['taskgroup_id'] = taskgroup['idx']
                 interrupt_event['taskgroup'] = taskgroup
+
+            for taskgroup_event in taskgroup['taskgroup_events']:
+                taskgroup_event['taskgroup_id'] = taskgroup['idx']
+                taskgroup_event['taskgroup'] = taskgroup
 
             # Create builtin signals
             # The RTOS task timer signal is used in the following conditions:
@@ -142,8 +148,8 @@ class LyraeModule(Module):
 
             # Validate names
             for obj_name, singular in zip(
-                ('tasks', 'timers', 'mutexes', 'interrupt_events'),
-                ("task", "timer", "mutex", "interrupt_event")
+                ('tasks', 'timers', 'mutexes', 'interrupt_events', 'taskgroup_events'),
+                ("task", "timer", "mutex", "interrupt_event", "taskgroup_event")
             ):
                 for obj in taskgroup[obj_name]:
                     if obj['name'] in all_obj_names[obj_name]:
@@ -158,7 +164,7 @@ class LyraeModule(Module):
                     all_obj_names[obj_name][obj['name']] = taskgroup
 
         # Merge all taskgroup objects into a single list, and re-index.
-        for obj_name in ('tasks', 'timers', 'mutexes', 'signal_sets', 'interrupt_events'):
+        for obj_name in ('tasks', 'timers', 'mutexes', 'signal_sets', 'interrupt_events', 'taskgroup_events'):
             config[obj_name] = LengthList(sum([tg[obj_name] for tg in config['taskgroups']], []))
             for idx, t in enumerate(config[obj_name]):
                 t['idx'] = idx

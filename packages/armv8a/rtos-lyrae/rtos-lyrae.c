@@ -147,6 +147,13 @@ struct interrupt_event_handler {
 };
 {{/interrupt_events.length}}
 
+{{#taskgroup_events.length}}
+struct taskgroup_event_handler {
+    {{prefix_type}}TaskId task;
+    {{prefix_type}}SignalSet sig_set;
+};
+{{/taskgroup_events.length}}
+
 struct task
 {
     context_t ctx;
@@ -280,6 +287,14 @@ static struct interrupt_event_handler interrupt_events[{{interrupt_events.length
 };
 {{/interrupt_events.length}}
 
+{{#taskgroup_events.length}}
+static struct taskgroup_event_handler taskgroup_events[{{taskgroup_events.length}}] = {
+{{#taskgroup_events}}
+    { {{prefix_const}}TASK_ID_{{task.name|u}}, {{prefix_const}}SIGNAL_SET_{{sig_set|u}} },
+{{/taskgroup_events}}
+};
+{{/taskgroup_events.length}}
+
 {{prefix_type}}TaskGroupId cpu_current_taskgroup[{{cpus.length}}];
 
 #define rtos_internal_current_taskgroup cpu_current_taskgroup[get_core_id()]
@@ -377,6 +392,14 @@ static {{prefix_type}}TaskGroupId interrupt_event_taskgroup_map[{{interrupt_even
 };
 {{/interrupt_events.length}}
 
+{{#taskgroup_events.length}}
+static {{prefix_type}}TaskGroupId taskgroup_event_taskgroup_map[{{taskgroup_events.length}}] = {
+{{#taskgroup_events}}
+    {{taskgroup_id}},
+{{/taskgroup_events}}
+};
+{{/taskgroup_events.length}}
+
 static {{prefix_type}}TaskGroupId cpu_taskgroup_base[{{cpus.length}}];
 static {{prefix_type}}TaskGroupId cpu_taskgroup_end[{{cpus.length}}];
 
@@ -393,6 +416,8 @@ struct taskgroup_context {
 static struct taskgroup_context taskgroup_contexts[{{taskgroups.length}}];
 
 static volatile uint64_t interrupt_event[{{taskgroups.length}}];
+
+static volatile uint64_t taskgroup_event[{{taskgroups.length}}];
 
 void __attribute__ ((noreturn)) rtos_return_from_irq(uint64_t spsr, uint64_t elr, uint64_t sp)
 {
@@ -638,6 +663,31 @@ interrupt_events_process(void)
 }
 {{/interrupt_events.length}}
 
+{{#taskgroup_events.length}}
+static void
+taskgroup_event_handle(const {{prefix_type}}TaskGroupEventId taskgroup_event_id)
+{
+    internal_assert(taskgroup_event_id < {{taskgroup_events.length}}, ERROR_ID_INTERNAL_INVALID_ID);
+    internal_assert_task_valid(taskgroup_events[taskgroup_event_id].task);
+    signal_send_set(taskgroup_events[taskgroup_event_id].task, taskgroup_events[taskgroup_event_id].sig_set);
+}
+
+static void
+taskgroup_events_process(void)
+{
+    uint64_t tmp;
+
+    tmp = taskgroup_event[current_taskgroup];
+    taskgroup_event[current_taskgroup] = 0;
+
+    while (tmp != 0)
+    {
+        const {{prefix_type}}TaskGroupEventId i = __builtin_ffs(tmp) - 1;
+        taskgroup_event_handle(i);
+        tmp &= ~(1U << i);
+    }
+}
+{{/taskgroup_events.length}}
 
 static void
 taskgroup_schedule(void)
@@ -685,6 +735,9 @@ get_next(void)
 {{#interrupt_events.length}}
         interrupt_events_process();
 {{/interrupt_events.length}}
+{{#taskgroup_events.length}}
+        taskgroup_events_process();
+{{/taskgroup_events.length}}
         next = sched_get_next();
 
         if (next == TASK_ID_NONE)
@@ -1059,6 +1112,20 @@ void
     taskgroup_runnable[tg] = true;
 }
 {{/interrupt_events.length}}
+
+{{#taskgroup_events.length}}
+void
+{{prefix_func}}taskgroup_event_raise(const {{prefix_type}}InterruptEventId taskgroup_event_id)
+{
+    {{prefix_type}}TaskGroupId tg = taskgroup_event_taskgroup_map[taskgroup_event_id];
+    taskgroup_event[tg] |= 1 << taskgroup_event_id;
+    taskgroup_runnable[tg] = true;
+    if (tg < current_taskgroup)
+    {
+        taskgroup_schedule();
+    }
+}
+{{/taskgroup_events.length}}
 
 void taskgroup_entry(void)
 {

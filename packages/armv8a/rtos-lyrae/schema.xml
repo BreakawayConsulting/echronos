@@ -55,6 +55,14 @@
                 </entry>
             </entry>
 
+            <entry name="taskgroup_events" type="list" auto_index_field="idx" default="[]">
+                <entry name="taskgroup_event" type="dict">
+                    <entry name="name" type="ident" />
+                    <entry name="task" type="object" group="tasks" />
+                    <entry name="sig_set" type="ident" />
+                </entry>
+            </entry>
+
             <entry name="mutexes" type="list" auto_index_field="idx" default="[]">
                 <entry name="mutex" type="dict">
                     <entry name="name" type="ident" />

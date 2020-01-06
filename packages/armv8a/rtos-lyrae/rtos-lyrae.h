@@ -24,6 +24,10 @@ typedef uint8_t {{prefix_type}}TaskGroupId;
 typedef uint{{interrupteventid_size}}_t {{prefix_type}}InterruptEventId;
 {{/interrupt_events.length}}
 
+{{#taskgroup_events.length}}
+typedef uint{{taskgroupeventid_size}}_t {{prefix_type}}TaskGroupEventId;
+{{/taskgroup_events.length}}
+
 #define {{prefix_const}}SIGNAL_SET_EMPTY (({{prefix_type}}SignalSet) UINT{{signalset_size}}_C(0))
 #define {{prefix_const}}SIGNAL_SET_ALL (({{prefix_type}}SignalSet) UINT{{signalset_size}}_MAX)
 
@@ -47,6 +51,10 @@ typedef uint{{interrupteventid_size}}_t {{prefix_type}}InterruptEventId;
 {{#interrupt_events}}
 #define {{prefix_const}}INTERRUPT_EVENT_ID_{{name|u}} (({{prefix_type}}InterruptEventId) UINT{{interrupteventid_size}}_C({{idx}}))
 {{/interrupt_events}}
+
+{{#taskgroup_events}}
+#define {{prefix_const}}TASKGROUP_EVENT_ID_{{name|u}} (({{prefix_type}}TaskGroupEventId) UINT{{taskgroupeventid_size}}_C({{idx}}))
+{{/taskgroup_events}}
 
 #define {{prefix_const}}TASK_ID_ZERO (({{prefix_type}}TaskId) UINT{{taskid_size}}_C(0))
 #define {{prefix_const}}TASK_ID_MAX (({{prefix_type}}TaskId)UINT{{taskid_size}}_C({{tasks.length}} - 1))
@@ -122,6 +130,10 @@ void {{prefix_func}}timer_tick(void);
 {{#interrupt_events.length}}
 void {{prefix_func}}interrupt_event_raise({{prefix_type}}InterruptEventId event);
 {{/interrupt_events.length}}
+
+{{#taskgroup_events.length}}
+void {{prefix_func}}taskgroup_event_raise({{prefix_type}}TaskGroupEventId event);
+{{/taskgroup_events.length}}
 
 void {{prefix_func}}start(void);
 #ifdef __cplusplus
