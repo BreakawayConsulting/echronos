@@ -12,55 +12,11 @@
 #include "system.h"
 #include "platform.h"
 
-/* GPIO block register definitions */
-#define GPFSEL (*(volatile uint32_t (*)[5])(0x3F200000))
-#define GPLEV (*(volatile uint32_t (*)[2])(0x3F200034))
-#define GPEDS (*(volatile uint32_t (*)[2])(0x3F200040))
-#define GPREN (*(volatile uint32_t (*)[2])(0x3F20004C))
-#define GPFEN (*(volatile uint32_t (*)[2])(0x3F200058))
-#define GPHEN (*(volatile uint32_t (*)[2])(0x3F200064))
-#define GPLEN (*(volatile uint32_t (*)[2])(0x3F200070))
-#define GPAREN (*(volatile uint32_t (*)[2])(0x3F20007C))
-#define GPAFEN (*(volatile uint32_t (*)[2])(0x3F200088))
-
-#define GPIO_PIN_23_MASK ((uint32_t) 0x00800000)
-#define GPIO_PIN_23_FSEL_MASK ((uint32_t) 0x00000e00)
-
-/* Interrupt block register definitions */
-#define IRQ_BASIC_PENDING (*(volatile uint32_t *)(0x3F00B200))
-#define IRQ_PENDING_1 (*(volatile uint32_t *)(0x3F00B204))
-#define IRQ_PENDING_2 (*(volatile uint32_t *)(0x3F00B208))
-#define FIQ_CONTROL (*(volatile uint32_t *)(0x3F00B20C))
-#define ENABLE_IRQS_1 (*(volatile uint32_t *)(0x3F00B210))
-#define ENABLE_IRQS_2 (*(volatile uint32_t *)(0x3F00B214))
-#define ENABLE_BASIC_IRQS (*(volatile uint32_t *)(0x3F00B218))
-#define DISABLE_IRQS_1 (*(volatile uint32_t *)(0x3F00B21C))
-#define DISABLE_IRQS_2 (*(volatile uint32_t *)(0x3F00B220))
-#define DISABLE_BASIC_IRQS (*(volatile uint32_t *)(0x3F00B224))
-
-#define BASIC_PENDING_ARM_TIMER_IRQ (1U << 0)
-#define BASIC_PENDING_ARM_MAILBOX_IRQ (1U << 1)
-#define BASIC_PENDING_ARM_DOORBELL_0_IRQ (1U << 2)
-#define BASIC_PENDING_ARM_DOORBELL_1_IRQ (1U << 3)
-#define BASIC_PENDING_GPU0_HALTED_IRQ (1U << 4)
-#define BASIC_PENDING_GPU1_HALTED_IRQ (1U << 5)
-#define BASIC_PENDING_ILLEGAL_ACCESS_TYPE1_IRQ (1U << 6)
-#define BASIC_PENDING_ILLEGAL_ACCESS_TYPE0_IRQ (1U << 7)
-#define BASIC_PENDING_PENDING_REGISTER_1 (1U << 8)
-#define BASIC_PENDING_PENDING_REGISTER_2 (1U << 9)
-
-#define IRQ_MASK_GPIO_0 (1U << 17)
-#define IRQ_MASK_GPIO_1 (1U << 18)
-#define IRQ_MASK_GPIO_2 (1U << 19)
-#define IRQ_MASK_GPIO_3 (1U << 20)
-
-
 void tick_irq(void);
 void fatal(RtosErrorId error_id);
 
-uint32_t ticks[2];
+uint32_t ticks[3];
 
-uint32_t gpio_count;
 volatile uint32_t local_timer_count;
 
 void
@@ -72,30 +28,11 @@ tick_irq(void)
 }
 
 void
-gpu_irq(void)
-{
-    uint32_t basic_pending = IRQ_BASIC_PENDING;
-
-    if (basic_pending & BASIC_PENDING_PENDING_REGISTER_2)
-    {
-        uint32_t pending_2 = IRQ_PENDING_2;
-        if (pending_2 & IRQ_MASK_GPIO_0)
-        {
-            uint32_t event = GPEDS[0];
-            if (event & GPIO_PIN_23_MASK)
-            {
-                gpio_count++;
-                rtos_interrupt_event_raise(RTOS_INTERRUPT_EVENT_ID_TG2_GPIO);
-            }
-            GPEDS[0] = event;
-        }
-    }
-}
-
-void
 local_timer_irq(void)
 {
+    debug_print("\nTICK\n");
     local_timer_count += 1;
+    rtos_interrupt_event_raise(RTOS_INTERRUPT_EVENT_ID_TG2_LOCAL_TIMER);
 }
 
 void
@@ -108,115 +45,6 @@ fatal(const RtosErrorId error_id)
     for (;;)
     {
     }
-}
-
-static void
-gpio_dump_registers(void)
-{
-    /* Display the values of all the GPIO registers */
-    int i;
-
-    for (i = 0; i < 5; i++)
-    {
-        debug_print("GPFSEL_");
-        debug_printhex8(i);
-        debug_print(" = ");
-        debug_printhex32(GPFSEL[i]);
-        debug_println("");
-    }
-
-    for (i = 0; i < 2; i++)
-    {
-        debug_print("GPREN_");
-        debug_printhex8(i);
-        debug_print(" = ");
-        debug_printhex32(GPREN[i]);
-        debug_println("");
-    }
-
-    for (i = 0; i < 2; i++)
-    {
-        debug_print("GPFEN_");
-        debug_printhex8(i);
-        debug_print(" = ");
-        debug_printhex32(GPFEN[i]);
-        debug_println("");
-    }
-
-    for (i = 0; i < 2; i++)
-    {
-        debug_print("GPHEN_");
-        debug_printhex8(i);
-        debug_print(" = ");
-        debug_printhex32(GPHEN[i]);
-        debug_println("");
-    }
-
-    for (i = 0; i < 2; i++)
-    {
-        debug_print("GPLEN_");
-        debug_printhex8(i);
-        debug_print(" = ");
-        debug_printhex32(GPLEN[i]);
-        debug_println("");
-    }
-
-    for (i = 0; i < 2; i++)
-    {
-        debug_print("GPAREN_");
-        debug_printhex8(i);
-        debug_print(" = ");
-        debug_printhex32(GPAREN[i]);
-        debug_println("");
-    }
-
-    for (i = 0; i < 2; i++)
-    {
-        debug_print("GPAFEN_");
-        debug_printhex8(i);
-        debug_print(" = ");
-        debug_printhex32(GPAFEN[i]);
-        debug_println("");
-    }
-
-    for (i = 0; i < 2; i++)
-    {
-        debug_print("GPLEV_");
-        debug_printhex8(i);
-        debug_print(" = ");
-        debug_printhex32(GPLEV[i]);
-        debug_println("");
-    }
-
-    for (i = 0; i < 2; i++)
-    {
-        debug_print("GPEDS_");
-        debug_printhex8(i);
-        debug_print(" = ");
-        debug_printhex32(GPEDS[i]);
-        debug_println("");
-    }
-}
-
-static void
-gpio_init(void)
-{
-    /* Initialize GPIO subsystem to configure for button presses */
-    gpio_dump_registers();
-
-    /* set pin 23 as an input */
-    GPFSEL[2] &= ~GPIO_PIN_23_FSEL_MASK;
-
-    /* Enable rising edge detection for pin 23 (and disable other events) */
-    GPREN[0] |= GPIO_PIN_23_MASK;
-    GPFEN[0] &= ~GPIO_PIN_23_MASK;
-    GPHEN[0] &= ~GPIO_PIN_23_MASK;
-    GPLEN[0] &= ~GPIO_PIN_23_MASK;
-    GPAREN[0] &= ~GPIO_PIN_23_MASK;
-    GPAFEN[0] &= ~GPIO_PIN_23_MASK;
-
-    /* enable interrupts for first GPIO block */
-    ENABLE_IRQS_2 |= IRQ_MASK_GPIO_0;
 }
 
 void
@@ -251,7 +79,6 @@ fn_tg2_a(void)
     debug_printhex8(rtos_taskgroup_current());
     debug_println("");
 
-    gpio_init();
     bcm2837_local_timer_init();
 
     rtos_task_start(RTOS_TASK_ID_TG2_B);
@@ -284,10 +111,8 @@ fn_tg2_b(void)
         rtos_mutex_unlock(RTOS_MUTEX_ID_TG2_TEST);
         rtos_yield();
 
-        rtos_signal_wait(RTOS_SIGNAL_ID_TG2_GPIO);
-        debug_print("[TG2] task b: GPIO count: ");
-        debug_printhex32(gpio_count);
-        debug_println("");
+        rtos_signal_wait(RTOS_SIGNAL_ID_TG2_LOCAL_TIMER);
+
         debug_print("[TG2] task b: local timer count: ");
         debug_printhex32(local_timer_count);
         debug_println("");

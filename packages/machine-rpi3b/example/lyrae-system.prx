@@ -21,7 +21,6 @@
     </module>
     <module name="bcm2837.platform">
       <tick_handler>tick_irq</tick_handler>
-      <gpu_handler>gpu_irq</gpu_handler>
       <local_timer_handler>local_timer_irq</local_timer_handler>
       <irq_return>rtos_return_from_irq</irq_return>
     </module>
@@ -113,7 +112,7 @@
 
           <signal_labels>
             <signal_label>
-              <name>tg2_gpio</name>
+              <name>tg2_local_timer</name>
               <global>true</global>
             </signal_label>
 
@@ -131,9 +130,9 @@
 
           <interrupt_events>
             <interrupt_event>
-              <name>tg2_gpio</name>
+              <name>tg2_local_timer</name>
               <task>tg2_b</task>
-              <sig_set>tg2_gpio</sig_set>
+              <sig_set>tg2_local_timer</sig_set>
             </interrupt_event>
           </interrupt_events>
 
