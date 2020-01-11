@@ -39,9 +39,13 @@
 
 /*<module>
   <code_gen>template</code_gen>
+  <headers>
+      <header path="platform.h" code_gen="template" />
+  </headers>
   <schema>
     <entry name="tick_handler" type="c_ident" optional="true" />
     <entry name="gpu_handler" type="c_ident" optional="true" />
+    <entry name="local_timer_handler" type="c_ident" optional="true" />
     <entry name="irq_return" type="c_ident" default="_asm_return_from_irq" />
   </schema>
 </module>*/
@@ -56,6 +60,9 @@
 #define MAILBOX_COUNT 4
 
 #define GPU_INTERRUPT_ROUTING (*(volatile uint32_t *)0x4000000C)
+#define LOCAL_TIMER_INTERRUPT_ROUTING (*(volatile uint32_t *)0x40000024)
+#define LOCAL_TIMER_CONTROL_STATUS (*(volatile uint32_t *)0x40000034)
+#define LOCAL_TIMER_IRQ_CLEAR_RELOAD (*(volatile uint32_t *)0x40000038)
 #define MAILBOX_INTERRUPT_CONTROL (*(volatile uint32_t (*)[CORE_COUNT])(0x40000050))
 #define IRQ_SOURCE (*(volatile uint32_t (*)[CORE_COUNT])(0x40000060))
 #define MAILBOX_SET  (*(volatile uint32_t (*)[CORE_COUNT][MAILBOX_COUNT])(0x40000080))
@@ -88,6 +95,10 @@ extern void {{tick_handler}}(void);
 {{#gpu_handler}}
 extern void {{gpu_handler}}(void);
 {{/gpu_handler}}
+
+{{#local_timer_handler}}
+extern void {{local_timer_handler}}(void);
+{{/local_timer_handler}}
 
 /* Level 1 page table has a single entry covering 1GB. Points
    to level2 pagetable with 512 2MB entries.
@@ -207,6 +218,13 @@ static void initialize_irq_routing(void)
     GPU_INTERRUPT_ROUTING = 0x0;
 }
 
+void bcm2837_local_timer_init(void)
+{
+    /* 1Hz (assuming 192MHz crystal */
+    LOCAL_TIMER_CONTROL_STATUS = (1UL << 29) | (1UL << 28) | (34200000);
+    LOCAL_TIMER_INTERRUPT_ROUTING = 0; /* route to core0 irq */
+}
+
 void bcm2837_init(void)
 {
     CoreId core = get_core_id();
@@ -274,6 +292,16 @@ __attribute__ ((noreturn)) void abort_handler(uint64_t type, uint64_t esr, uint6
         source &= ~MAILBOX_0_IRQ_SOURCE;
         MAILBOX_RD_CLR[core_id][0] = MAILBOX_RD_CLR[core_id][0];
     }
+
+{{#local_timer_handler}}
+    if (source & LOCAL_TIMER_IRQ_SOURCE)
+    {
+        source &= ~LOCAL_TIMER_IRQ_SOURCE;
+        /* clear interrupt flag */
+        LOCAL_TIMER_IRQ_CLEAR_RELOAD = (1U << 31);
+        {{local_timer_handler}}();
+    }
+{{/local_timer_handler}}
 
     if (source != 0)
     {
