@@ -1002,7 +1002,7 @@ void
     assert_mutex_valid(m);
     api_assert(mutexes[m].holder == get_current_task(), ERROR_ID_NOT_HOLDING_MUTEX);
 
-    for (t = taskgroup_mutex_base[current_taskgroup]; t < taskgroup_mutex_end[current_taskgroup]; t++)
+    for (t = taskgroup_task_base[current_taskgroup]; t < taskgroup_task_end[current_taskgroup]; t++)
     {
         if (mutex_waiters[t] == m)
         {
