@@ -1123,7 +1123,7 @@ void
 
 {{#taskgroup_events.length}}
 void
-{{prefix_func}}taskgroup_event_raise(const {{prefix_type}}InterruptEventId taskgroup_event_id)
+{{prefix_func}}taskgroup_event_raise(const {{prefix_type}}TaskGroupEventId taskgroup_event_id)
 {
     CoreId current_core = get_core_id();
     {{prefix_type}}TaskGroupId tg = taskgroup_event_taskgroup_map[taskgroup_event_id];
