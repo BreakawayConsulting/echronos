@@ -10,6 +10,7 @@
 #include "debug.h"
 #include "machine-timer.h"
 #include "system.h"
+#include "platform.h"
 
 /* GPIO block register definitions */
 #define GPFSEL (*(volatile uint32_t (*)[5])(0x3F200000))
@@ -60,6 +61,7 @@ void fatal(RtosErrorId error_id);
 uint32_t ticks[2];
 
 uint32_t gpio_count;
+volatile uint32_t local_timer_count;
 
 void
 tick_irq(void)
@@ -88,6 +90,12 @@ gpu_irq(void)
             GPEDS[0] = event;
         }
     }
+}
+
+void
+local_timer_irq(void)
+{
+    local_timer_count += 1;
 }
 
 void
@@ -244,6 +252,7 @@ fn_tg2_a(void)
     debug_println("");
 
     gpio_init();
+    bcm2837_local_timer_init();
 
     rtos_task_start(RTOS_TASK_ID_TG2_B);
     rtos_task_start(RTOS_TASK_ID_TG2_C);
@@ -278,6 +287,9 @@ fn_tg2_b(void)
         rtos_signal_wait(RTOS_SIGNAL_ID_TG2_GPIO);
         debug_print("[TG2] task b: GPIO count: ");
         debug_printhex32(gpio_count);
+        debug_println("");
+        debug_print("[TG2] task b: local timer count: ");
+        debug_printhex32(local_timer_count);
         debug_println("");
     }
 }
