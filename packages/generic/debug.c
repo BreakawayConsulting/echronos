@@ -60,6 +60,36 @@ get_hexdigit(const uint_least8_t val)
     return ch;
 }
 
+void
+{{prefix}}debug_printhex8(const uint8_t val)
+{
+    char str[5];
+    str[0] = '0';
+    str[1] = 'x';
+    str[2] = get_hexdigit((val >> 4) & 0xf);
+    str[3] = get_hexdigit((val >> 0) & 0xf);
+    str[4] = 0;
+    debug_print(str);
+}
+
+void
+{{prefix}}debug_printhex32(const uint32_t val)
+{
+    char str[11];
+    str[0] = '0';
+    str[1] = 'x';
+    str[2] = get_hexdigit((val >> 28) & 0xf);
+    str[3] = get_hexdigit((val >> 24) & 0xf);
+    str[4] = get_hexdigit((val >> 20) & 0xf);
+    str[5] = get_hexdigit((val >> 16) & 0xf);
+    str[6] = get_hexdigit((val >> 12) & 0xf);
+    str[7] = get_hexdigit((val >> 8) & 0xf);
+    str[8] = get_hexdigit((val >> 4) & 0xf);
+    str[9] = get_hexdigit((val >> 0) & 0xf);
+    str[10] = 0;
+    debug_print(str);
+}
+
 {{#enable_64bit}}
 void
 {{prefix}}debug_printhex64(const uint64_t val)
@@ -87,33 +117,3 @@ void
     debug_print(str);
 }
 {{/enable_64bit}}
-
-void
-{{prefix}}debug_printhex32(const uint32_t val)
-{
-    char str[11];
-    str[0] = '0';
-    str[1] = 'x';
-    str[2] = get_hexdigit((val >> 28) & 0xf);
-    str[3] = get_hexdigit((val >> 24) & 0xf);
-    str[4] = get_hexdigit((val >> 20) & 0xf);
-    str[5] = get_hexdigit((val >> 16) & 0xf);
-    str[6] = get_hexdigit((val >> 12) & 0xf);
-    str[7] = get_hexdigit((val >> 8) & 0xf);
-    str[8] = get_hexdigit((val >> 4) & 0xf);
-    str[9] = get_hexdigit((val >> 0) & 0xf);
-    str[10] = 0;
-    debug_print(str);
-}
-
-void
-{{prefix}}debug_printhex8(const uint8_t val)
-{
-    char str[5];
-    str[0] = '0';
-    str[1] = 'x';
-    str[2] = get_hexdigit((val >> 4) & 0xf);
-    str[3] = get_hexdigit((val >> 0) & 0xf);
-    str[4] = 0;
-    debug_print(str);
-}
