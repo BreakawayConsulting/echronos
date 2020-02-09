@@ -589,6 +589,10 @@ class Loader(Action):
     pass
 
 
+class Runner(Action):
+    pass
+
+
 # pylint: disable=too-many-instance-attributes
 class System:
     def __init__(self, name, dom, project):
@@ -820,6 +824,15 @@ class System:
         """
         self._run_action(Loader)
 
+    def run(self):
+        """Run the system.
+
+        Raises an appropriate exception if there is a load error.
+        No return value from this method.
+
+        """
+        self._run_action(Runner)
+
     def analyze(self):
         try:
             subprocess.check_output(["splint", "--help"], stderr=subprocess.STDOUT)
@@ -1031,6 +1044,8 @@ class Project:
                 return Builder(entity_name, py_module)
             elif hasattr(py_module, 'system_load'):
                 return Loader(entity_name, py_module)
+            elif hasattr(py_module, 'system_run'):
+                return Runner(entity_name, py_module)
             elif hasattr(py_module, 'module'):
                 module = py_module.module
                 module.name = entity_name
@@ -1114,6 +1129,19 @@ def load(args):
     return call_system_function(args, System.load)
 
 
+def run(args):
+    """Run the system specified on the command line on an execution target.
+
+    `args` is expected to provide the following attributes:
+    - `project`: an instance of Project
+    - `system`: the name of a system entity to instantiate and load
+
+    This function returns 0 on success and 1 if an error occurs.
+
+    """
+    return call_system_function(args, System.run)
+
+
 def analyze(args):
     """Statically analyze the code of the system specified on the command line.
 
@@ -1167,6 +1195,7 @@ SUBCOMMAND_TABLE = {
     'gen': generate,
     'build': build,
     'load': load,
+    'run': run,
     'analyze': analyze,
 }
 
@@ -1196,6 +1225,9 @@ def get_command_line_arguments():
 
     load_parser = subparsers.add_parser('load', help='Load a system image onto a device and execute it')
     load_parser.add_argument('system', help='system to load')
+
+    run_parser = subparsers.add_parser('run', help='Load a system image onto a device and execute it')
+    run_parser.add_argument('system', help='system to run')
 
     load_parser = subparsers.add_parser('analyze', help='Statically analyze the code of a system')
     load_parser.add_argument('system', help='system to analyze')
