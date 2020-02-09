@@ -1229,8 +1229,8 @@ def get_command_line_arguments():
     run_parser = subparsers.add_parser('run', help='Load a system image onto a device and execute it')
     run_parser.add_argument('system', help='system to run')
 
-    load_parser = subparsers.add_parser('analyze', help='Statically analyze the code of a system')
-    load_parser.add_argument('system', help='system to analyze')
+    analyze_parser = subparsers.add_parser('analyze', help='Statically analyze the code of a system')
+    analyze_parser.add_argument('system', help='system to analyze')
 
     args = parser.parse_args()
 
