@@ -12,8 +12,12 @@
 
 extern void {{prefix}}debug_println(const char *msg);
 extern void {{prefix}}debug_print(const char *msg);
+{{#enable_8bit}}
 extern void {{prefix}}debug_printhex8(uint8_t val);
+{{/enable_8bit}}
+{{#enable_32bit}}
 extern void {{prefix}}debug_printhex32(uint32_t val);
+{{/enable_32bit}}
 {{#enable_64bit}}
 extern void {{prefix}}debug_printhex64(uint64_t val);
 {{/enable_64bit}}

@@ -18,6 +18,8 @@
   <schema>
    <entry name="prefix" type="c_ident" default="" />
    <entry name="ll_debug" type="c_ident" default="" />
+   <entry name="enable_8bit" type="bool" default="true" />
+   <entry name="enable_32bit" type="bool" default="true" />
    <entry name="enable_64bit" type="bool" default="false" />
   </schema>
 </module>*/
@@ -60,6 +62,7 @@ get_hexdigit(const uint_least8_t val)
     return ch;
 }
 
+{{#enable_8bit}}
 void
 {{prefix}}debug_printhex8(const uint8_t val)
 {
@@ -71,7 +74,9 @@ void
     str[4] = 0;
     debug_print(str);
 }
+{{/enable_8bit}}
 
+{{#enable_32bit}}
 void
 {{prefix}}debug_printhex32(const uint32_t val)
 {
@@ -89,6 +94,7 @@ void
     str[10] = 0;
     debug_print(str);
 }
+{{/enable_32bit}}
 
 {{#enable_64bit}}
 void
