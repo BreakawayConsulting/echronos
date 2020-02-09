@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+     Copyright (c) 2020, Breakaway Consulting Pty. Ltd.
+-->
+
+<system>
+  <modules>
+    <module name="machine-dsp6-sim.build" />
+    <module name="machine-dsp6-sim.run" />
+    <module name="machine-dsp6-sim.hosted-debug" />
+
+    <module name="generic.hello">
+      <phrase>Hello DSP6 Simulator</phrase>
+    </module>
+    <module name="generic.debug">
+      <enable_8bit>false</enable_8bit>
+    </module>
+
+  </modules>
+</system>
