@@ -42,7 +42,7 @@ void
 }
 
 static char
-get_hexdigit(const uint8_t val)
+get_hexdigit(const uint_least8_t val)
 {
     char ch;
     if (val < 10)
