@@ -24,8 +24,15 @@ def system_build(system):
         reldir, filename = os.path.split(os.path.relpath(c_file, output_dir))
         file_els.append('    <file type="c" name="{}" path="{}" />'.format(filename, reldir))
 
-    # FIXME: Add support for custom include paths.
-    # inc_path_args = ['-I%s' % i for i in system.include_paths]
+    includes = [
+        os.path.relpath(include_path, output_dir)
+        for include_path in system.include_paths
+    ]
+
+    include_str = ""
+    if len(includes):
+        value_str = " ".join(includes)
+        include_str = """<option id="cpp.include" value="{}" inherit="1"/>\n""".format(value_str)
 
     file_str = "\n".join(file_els)
     with chessde_prx.open("w") as f:
@@ -35,7 +42,8 @@ def system_build(system):
     <option id="project.type" value="exe"/>
     <option id="cpp.wundef" value="on"/>
     {}
+    {}
 </project>
-""".format(file_str))
+""".format(include_str, file_str))
 
     execute(["chessmk", str(chessde_prx)])
