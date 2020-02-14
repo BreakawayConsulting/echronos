@@ -18,9 +18,9 @@ Main entry point.
 """
 from distutils.spawn import find_executable
 from xml.parsers.expat import ExpatError
+from importlib.util import spec_from_file_location, module_from_spec
 import argparse
 import functools
-import imp
 import inspect
 import os
 import pdb
@@ -67,6 +67,24 @@ sys.modules['prj'] = sys.modules[__name__]
 
 
 SIG_NAMES = dict((k, v) for v, k in signal.__dict__.items() if v.startswith('SIG'))
+
+
+def load_source(name, pathname):
+    """load_source from `pathname` and create a module called `name`.
+
+    The module is returned from the function (in addition to being added
+    to sys.modules).
+
+    Note: The deprecated function imp.load_source was previously reused.
+    This is a partial reimplementation of that function using the new
+    importlib module. There are some specific corner cases that are not
+    directly implemented, however this is not important for the manner in which
+    this is used."""
+    spec = spec_from_file_location(name, pathname)
+    module = module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 def canonical_path(path):
@@ -1031,7 +1049,7 @@ class Project:
                 raise EntityLoadError("Error parsing system import '{}:{}': {!s}".format(exc.path, exc.lineno, exc))
         elif ext == '.py':
             try:
-                py_module = imp.load_source("__prj.%s" % entity_name, path)
+                py_module = load_source("__prj.%s" % entity_name, path)
             except:
                 exc_type, exc_value, trace = sys.exc_info()
                 tb_str = ''.join(traceback.format_exception(exc_type, exc_value, trace.tb_next, chain=False))
