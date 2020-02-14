@@ -38,7 +38,7 @@ void fn_b(void);
 void
 fn_a(void)
 {
-    uint8_t count;
+    uint_least8_t count;
 
     /* FIXME: These are really just here to force both tasks to be runnable */
     rtos_signal_send_set(0, 0);
@@ -80,7 +80,7 @@ fn_a(void)
 void
 fn_b(void)
 {
-    uint8_t count;
+    uint_least8_t count;
 
     debug_println("task b: attempting lock");
     rtos_mutex_lock(RTOS_MUTEX_ID_TEST);
