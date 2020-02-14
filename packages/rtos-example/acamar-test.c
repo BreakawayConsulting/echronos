@@ -14,11 +14,7 @@
 #include <stdint.h>
 
 #include "rtos-acamar.h"
-
-extern void debug_println(const char *msg);
-extern void debug_print(const char *msg);
-extern void debug_printhex32(uint32_t val);
-extern void debug_printhex8(uint8_t val);
+#include "debug.h"
 
 void fn_a(void);
 void fn_b(void);
