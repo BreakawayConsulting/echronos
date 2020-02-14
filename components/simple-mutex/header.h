@@ -7,7 +7,7 @@
 
 /*| public_types |*/
 {{#mutexes.length}}
-typedef uint8_t {{prefix_type}}MutexId;
+typedef uint_least8_t {{prefix_type}}MutexId;
 {{/mutexes.length}}
 
 /*| public_structures |*/
