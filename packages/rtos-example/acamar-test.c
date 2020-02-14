@@ -10,6 +10,13 @@
  * @TAG(CSIRO_BSD_MIT)
  */
 
+/*<module>
+  <code_gen>template</code_gen>
+  <schema>
+   <entry name="taskid_size" type="int" default="8" />
+  </schema>
+</module>*/
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -44,9 +51,9 @@ void
 fn_task_switch_profiling(RtosTaskId from, RtosTaskId to)
 {
     debug_print("\nTask switch from ");
-    debug_printhex8(from);
+    debug_printhex{{taskid_size}}(from);
     debug_print(" to ");
-    debug_printhex8(to);
+    debug_printhex{{taskid_size}}(to);
     debug_print("\n");
 }
 
