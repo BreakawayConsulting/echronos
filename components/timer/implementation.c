@@ -139,7 +139,7 @@ timer_tick_process(void)
 {
     precondition_preemption_disabled();
     {
-        const uint8_t pending_ticks = timer_pending_ticks_get_and_clear_atomically();
+        const uint_least8_t pending_ticks = timer_pending_ticks_get_and_clear_atomically();
 
         if (pending_ticks > 1)
         {
