@@ -47,7 +47,7 @@ void
 fn_a(void)
 {
     volatile int i;
-    uint8_t count;
+    uint_least8_t count;
 
     rtos_task_start(RTOS_TASK_ID_B);
 
