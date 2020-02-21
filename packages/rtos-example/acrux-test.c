@@ -33,7 +33,7 @@ tick_irq(void)
 void
 fn_a(void)
 {
-    uint8_t count;
+    uint_least8_t count;
     rtos_unblock(0);
     rtos_unblock(1);
 
@@ -64,7 +64,7 @@ fn_a(void)
 void
 fn_b(void)
 {
-    uint8_t count;
+    uint_least8_t count;
 
     debug_println("task b: attempting lock");
     rtos_mutex_lock(0);
