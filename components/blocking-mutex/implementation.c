@@ -2,7 +2,7 @@
 
 /*| object_like_macros |*/
 {{#mutexes.length}}
-#define MUTEX_ID_NONE ((MutexIdOption) UINT8_MAX)
+#define MUTEX_ID_NONE ((MutexIdOption) UINT_LEAST8_MAX)
 {{/mutexes.length}}
 
 /*| types |*/
@@ -218,7 +218,7 @@ void
 {{prefix_func}}mutex_stats_clear(void)
 {
     /* memset would be preferable, but string.h is not available on all platforms */
-    uint8_t mutex_index;
+    uint_least8_t mutex_index;
     for (mutex_index = 0; mutex_index < {{mutexes.length}}; mutex_index += 1)
     {
         mutex_stats[mutex_index].mutex_lock_counter = 0;

@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 /*| public_types |*/
-typedef uint8_t {{prefix_type}}MutexId;
+typedef uint_least8_t {{prefix_type}}MutexId;
 
 /*| public_structures |*/
 
